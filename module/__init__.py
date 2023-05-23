@@ -28,6 +28,7 @@ async def register():
             user=os.getenv("MYSQL_USER"),
             password=os.getenv("MYSQL_PASSWORD"),
             db=os.getenv("MYSQL_DATABASE"),
+
             charset='utf8',
             loop=loop,
             ssl=ctx,
