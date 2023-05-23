@@ -20,10 +20,10 @@ async def register():
     try:
         print("start to connect db!")
         POOL = await aiomysql.create_pool(
-            host='aws.connect.psdb.cloud',
+            host='',
             port=3306,
-            user='w9lcpjt2lci4t6ywjniy',
-            password='pscale_pw_wQ0nZ3IBGHGRczI98mD7ZrXkZMmuL8A7A67wP0aiXXV',
+            user='',
+            password='',
             db='sh-sql',
             charset='utf8',
             loop=loop,

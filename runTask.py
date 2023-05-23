@@ -6,7 +6,6 @@ import pyperclip as pc
 
 from loop import get_loop
 
-
 open_wchat = ["ctrl", "alt", "w"]
 wchat_search = ["ctrl", "f"]
 PAUSE = 1.5
@@ -25,7 +24,6 @@ async def init_task(server, regsitertime, task_module):
         })
 
     for item in task_list:
-        print("item: ", item)
         regsitertime.add({
             "id": item[0],
             "name": item[1],
