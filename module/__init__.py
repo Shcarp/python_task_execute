@@ -5,12 +5,15 @@ import os
 import ssl
 import aiomysql
 from loop import loop
+from dotenv import load_dotenv
 
 __all__ = ["mysql"]
 
 ssl_defaults = ssl.get_default_verify_paths()
 ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
 ctx.load_verify_locations(cafile=ssl_defaults.cafile)
+
+load_dotenv()
 
 async def register():
     '''
@@ -20,22 +23,20 @@ async def register():
     try:
         print("start to connect db!")
         POOL = await aiomysql.create_pool(
-            host='aws.connect.psdb.cloud',
+            host=os.getenv("MYSQL_HOST"),
             port=3306,
-            user='w9lcpjt2lci4t6ywjniy',
-            password='pscale_pw_wQ0nZ3IBGHGRczI98mD7ZrXkZMmuL8A7A67wP0aiXXV',
-            db='sh-sql',
+            user=os.getenv("MYSQL_USER"),
+            password=os.getenv("MYSQL_PASSWORD"),
+            db=os.getenv("MYSQL_DATABASE"),
             charset='utf8',
             loop=loop,
             ssl=ctx,
         )
-        print("succeed to connect db!")
         return POOL
     except asyncio.CancelledError:
         raise asyncio.CancelledError
     except Exception as ex:
         print(ex)
-        print("mysql数据库连接失败：{}".format(ex.args[0]))
         return False
 
 # POOL = register()

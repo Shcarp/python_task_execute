@@ -1,7 +1,4 @@
-from dbutils.pooled_db import PooledDB
-
-from loop import get_loop
-
+# Desc: mysql操作
 class TransactionDecorator:
     def __init__(self, func):
         self.func = func
