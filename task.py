@@ -101,7 +101,6 @@ async def updateTaskStatus(ctx):
             ctx.serve.registerTime.remove(taskBody)
         # 如果取消任务，那么就要把任务从定时任务中移除
         elif (ctx.data["status"] == "cancel"):
-            global task_queue
             ctx.serve.registerTime.remove(taskBody)
             # 遍历任务队列，如果有任务id相同的，那么就移除
             for item in task_queue:

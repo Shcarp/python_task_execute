@@ -1,8 +1,4 @@
-from globals import task_queue, server, loop
+from globals import get_loop, task_queue, server
 
 def push(task):
     task_queue.put_nowait(task)
-    loop.run_until_complete(server.push({
-        "event": "task-size",
-        "data": task_queue.qsize()
-    }))

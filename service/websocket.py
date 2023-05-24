@@ -103,7 +103,6 @@ class WebSocketConnection:
         await self.__socket.send(json.dumps(recvData))
 
 class WebSocketServer:
-    __port = 9673
     __connections = set()
     __CONNECT = set()
 
@@ -116,15 +115,12 @@ class WebSocketServer:
         else:
             raise AttributeError("module {} not found".format(name))
 
-    def __init__(self, port):
-        self.__port = port if port is not None else self.port
-
-    async def run(self):
+    async def run(self, port = 9673):
         '''
            启动服务
         '''
-        print("server run, port: {}, pid: {}".format(self.__port, os.getpid()))
-        async with serve(self.handleConnect, "", self.__port):
+        print("server run, port: {}, pid: {}".format(port, os.getpid()))
+        async with serve(self.handleConnect, "", port):
             await asyncio.Future()
         
     def registerHandle(self, identification, func: Callable[[Ctx], None]):

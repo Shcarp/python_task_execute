@@ -4,7 +4,7 @@ import asyncio
 import os
 import ssl
 import aiomysql
-from loop import loop
+from globals import get_loop
 from dotenv import load_dotenv
 
 __all__ = ["mysql"]
@@ -24,6 +24,7 @@ async def register():
     初始化，获取数据库连接池
     :return:
     '''
+    loop = get_loop()
     try:
         print("start to connect db!")
         POOL = await aiomysql.create_pool(
@@ -34,7 +35,7 @@ async def register():
             db=os.getenv("MYSQL_DATABASE"),
             charset='utf8',
             loop=loop,
-            ssl=None,
+            ssl=ssl_ctx,
         )
         return POOL
     except asyncio.CancelledError:

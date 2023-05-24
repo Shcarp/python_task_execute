@@ -2,18 +2,43 @@ import asyncio
 import time
 import pyautogui as pg
 import pyperclip as pc
-from globals import task_queue
+from globals import get_loop, task_queue, loop
 
 open_wchat = ["ctrl", "alt", "w"]
 wchat_search = ["ctrl", "f"]
 PAUSE = 1.5
 
-def worker(task_queue, report):
+async def init_task(server, regsitertime, task_module):
+    task_list = await task_module.get_all_status_task("progress")
+    async def callback(event, message):
+        await server.push({
+            "event": event,
+            "data": message
+        })
+    
+    def do(tsak):
+        task_queue.put_nowait(tsak)
+
+    for item in task_list:
+        regsitertime.add({
+            "id": item[0],
+            "name": item[1],
+            "type": item[2],
+            "time": item[4],
+            "content": item[5],
+            "member": item[6].split(","),
+            "callback": callback
+        }, do)
+
+def report(task):
+    loop = get_loop()
+    future = asyncio.run_coroutine_threadsafe(task, loop)
+    return future.result()
+
+def worker():
     while True:
         task = task_queue.get()
-        print("task: ", task["name"])
         consumption(task)
-        print("task: ", task["name"], "done")
         report(task["callback"]("task-size", task_queue.qsize()))
         task_queue.task_done()
     

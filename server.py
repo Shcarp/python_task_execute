@@ -1,11 +1,10 @@
 from module import register
-from runTask import init_task
-# from service import websocket
+from run_task import init_task
 from task import addTask, editTask, getTaskList, updateTaskStatus
 from module.mysql import TaskMySql, WechatNamesMySql
 from wx import addWxName, getWxNameList;
 
-# from globals import task_queue, server, loop
+from globals import get_loop, task_queue, server
 
 async def init_task(server, regsitertime, task_module):
     task_list = await task_module.get_all_status_task("progress")
@@ -26,7 +25,8 @@ async def init_task(server, regsitertime, task_module):
             "callback": callback
         })
 
-def run_server(server, regsitertime, loop, task_queue):
+def run_server(regsitertime):
+    loop = get_loop()
     pool = loop.run_until_complete(register())
 
     task_module = TaskMySql(pool)

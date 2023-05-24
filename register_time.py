@@ -1,6 +1,9 @@
 import threading
 import time
 import schedule
+from globals import get_loop
+
+from task_queue import push
 
 lock = threading.RLock()
 
@@ -22,22 +25,16 @@ class RegisterTimeError(Exception):
 class RegisterTime:
     __time_table = {}
 
-    push = None
-
-    def __init__(self, push):
-        self.push = push
-        pass
-
     @Synchronized()
-    def add(self, task):
+    def add(self, task, callback = push):
         id = task["id"]
         if (id not in self.__time_table):
-            job = self.__addSchedule(task)
+            job = self.__addSchedule(task, callback)
             self.__time_table[id] = job
         else:
             oldJob = self.__time_table.pop(id)
-            self.__removeSchedule(oldJob)
-            job = self.__addSchedule(task)
+            self.__removeSchedule(oldJob, callback)
+            job = self.__addSchedule(task, callback)
             self.__time_table[id] = task
             
     @Synchronized()
@@ -58,29 +55,32 @@ class RegisterTime:
         timeS = time.localtime(stamp / 1000)
         return time.strftime("%H:%M", timeS)
 
-    def __addSchedule(self, task):
+    def __addSchedule(self, task, callable):
         job = None
         if (task["type"] == "fixTime"):
             try:
-                job = schedule.every().day.at(self.conversion_time(task["time"])).do(self.__wrap(task))
+                # 如果callback不为空，那么就要把callback传入到job中
+                job = schedule.every().day.at(self.conversion_time(task["time"])).do(self.__wrap(callable , task))
                 print("add fixTime task: ", task["name"])
             except:
                 raise RegisterTimeError("task time format error", task)
         else:
             try:
-                job = schedule.every(int(task["time"])).seconds.do(self.__wrap(task))
+                job = schedule.every(int(task["time"])).seconds.do(self.__wrap(callable, task))
                 print("add intervalTime task: ", task["name"])
             except:
                 raise RegisterTimeError("task time format error", task)
         return job
     
-    def __removeSchedule(self, job):
+    def __removeSchedule(self, job, callable):
         schedule.cancel_job(job)
+        if callable is not None:
+            callable()
     
-    def __wrap(self, task):
+    def __wrap(self, run, task):
         def inner():
             try:
-                self.push(task)
+                run(task)
             except Exception as e:
                 print("running error: ", e)
         return inner
