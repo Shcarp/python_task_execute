@@ -1,5 +1,7 @@
 import asyncio
 import json
+import os
+import websockets
 from typing import Callable
 from websockets.server import serve
 
@@ -64,6 +66,7 @@ class Ctx:
     async def push(self, message):
         recvData = {
             "type": "push",
+            "status": 200,
             "data": message
         }
         await self.__socket.send(json.dumps(recvData))
@@ -83,9 +86,11 @@ class WebSocketConnection:
 
     async def handleMessage(self):
         async for data in self.socket:
+            print(data)
             pdata = json.loads(data)
             ctx = Ctx(self.__serve, pdata["sequence"], pdata["data"]["data"], self.socket)
             handles = await self.__serve.getHandles(pdata["data"]["url"])
+            print(handles)
             for handle in handles:
                 await handle(ctx)
 
@@ -99,7 +104,8 @@ class WebSocketConnection:
 
 class WebSocketServer:
     __port = 9673
-    __connections = []
+    __connections = set()
+    __CONNECT = set()
 
     __module = {}
     __handleDirectory = {}
@@ -114,25 +120,58 @@ class WebSocketServer:
         self.__port = port if port is not None else self.port
 
     async def run(self):
+        '''
+           启动服务
+        '''
+        print("server run, port: {}, pid: {}".format(self.__port, os.getpid()))
         async with serve(self.handleConnect, "", self.__port):
             await asyncio.Future()
-
+        
     def registerHandle(self, identification, func: Callable[[Ctx], None]):
+        '''
+            注册处理函数
+        '''
         handles = self.__handleDirectory.get(identification, [])
         handles.append(func)
         self.__handleDirectory[identification] = handles
 
     def addModule(self, name, module):
+        '''
+            添加模块
+        '''
         self.__module[name] = module
 
     async def getHandles(self, identification):
+        '''
+            获取处理函数
+        '''
         return self.__handleDirectory.get(identification, [])
 
     async def handleConnect(self, websocket):
+        '''
+            处理连接
+        '''
         connection = WebSocketConnection(self, websocket)
-        self.__connections.append(connection)
-        await connection.handleMessage()
+        self.__connections.add(connection)
+        self.__CONNECT.add(websocket)
+        try:
+            await connection.handleMessage()
+            await websocket.await_closed()
+        except Exception as e:
+            print(e)
+        finally:
+            self.__connections.remove(connection)
+            self.__CONNECT.remove(websocket)
+        
     
     async def push(self, message):
-        for connection in self.__connections:
-            await connection.push(message)
+        '''
+            推送消息
+        '''
+        recvData = {
+            "type": "push",
+            "status": 200,
+            "data": message
+        }
+
+        websockets.broadcast(self.__CONNECT, json.dumps(recvData))

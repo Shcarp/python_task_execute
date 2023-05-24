@@ -38,11 +38,13 @@ class TaskMySql:
         return conn, cur
 
     @TransactionDecorator
-    async def init_sql(slef, cursor):
+    async def init_sql(self, cursor, init_func):
         # 判断任务表是否存在，不存在则创建
         await cursor.execute("SHOW TABLES LIKE 'task'")
-        if (cursor.fetchone() is None):
+        if (cursor.fetchone().result() is None):
             await cursor.execute("CREATE TABLE task ( id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(100) NOT NULL,type VARCHAR(50),status VARCHAR(50),time BIGINT,content TEXT,member VARCHAR(200))")
+        if init_func is not None:
+            await init_func(self)
 
     @TransactionDecorator
     async def create_task(slef, cursor, task_data):
@@ -51,7 +53,7 @@ class TaskMySql:
         await cursor.execute(query, (task_data['name'], task_data['type'], task_data['status'], task_data['time'], task_data['content'], ",".join(task_data['member'])))
         # 获取新插入任务的ID
         task_id = cursor.lastrowid
-        return task_id.result()
+        return task_id
     
     # 获取任务列表
     @TransactionDecorator
@@ -73,7 +75,7 @@ class TaskMySql:
     async def update_task_status(self, cursor, task_id, status):
         query = "UPDATE task SET status = %s WHERE id = %s"
         await cursor.execute(query, (status, task_id))
-        return task_id.result()
+        return task_id
     
     # 获取所有进行中的任务
     @TransactionDecorator
@@ -108,11 +110,14 @@ class WechatNamesMySql:
         return conn, cur
     
     @TransactionDecorator
-    async def init_sql(slef, cursor):
+    async def init_sql(self, cursor, init_func):
         # 判断任务表是否存在，不存在则创建
         await cursor.execute("SHOW TABLES LIKE 'wechat_names'")
-        if (cursor.fetchone() is None):
+        if (cursor.fetchone().result() is None):
+            print("create wechat_names")
             await cursor.execute("CREATE TABLE wechat_names (id INT AUTO_INCREMENT PRIMARY KEY,name VARCHAR(100) NOT NULL)")
+        if init_func is not None:
+            await init_func(self)
 
     @TransactionDecorator
     async def create_wechat_name(self, cursor, name):
@@ -121,7 +126,8 @@ class WechatNamesMySql:
         await cursor.execute(query, (name,))
         # 获取新插入昵称的ID
         name_id = cursor.lastrowid
-        return name_id.result()
+        print(name_id)
+        return name_id
     
     # 获取微信昵称列表
     @TransactionDecorator

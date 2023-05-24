@@ -1,7 +1,7 @@
 import time
 import threading
 import schedule
-
+import globals
 from register_time import RegisterTime
 from runTask import worker
 from server import run_server

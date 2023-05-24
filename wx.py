@@ -11,6 +11,7 @@ async def getList(ctx):
     return res
 
 async def addWxName(ctx):
+    print("addWxName")
     try:
         id = await ctx.serve.wechat.create_wechat_name(ctx.data["wx_name"])
         ctx.status = 200
@@ -20,7 +21,7 @@ async def addWxName(ctx):
         await ctx.send()
         await ctx.serve.push({
             "event": "wechat-name/add",
-            "data": getList(ctx)
+            "data": await getList(ctx)
         })
     except Exception as e:
         ctx.status = 500

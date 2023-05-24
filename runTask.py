@@ -1,54 +1,25 @@
 import asyncio
-import queue
 import time
 import pyautogui as pg
 import pyperclip as pc
-
-from loop import get_loop
+from globals import task_queue
 
 open_wchat = ["ctrl", "alt", "w"]
 wchat_search = ["ctrl", "f"]
 PAUSE = 1.5
 
-task_queue = queue.Queue()
-
-def push(task):
-    task_queue.put_nowait(task)
-
-async def init_task(server, regsitertime, task_module):
-    task_list = await task_module.get_all_status_task("progress")
-    async def callback(event, message):
-        await server.push({
-            "event": event,
-            "data": message
-        })
-
-    for item in task_list:
-        regsitertime.add({
-            "id": item[0],
-            "name": item[1],
-            "type": item[2],
-            "time": item[4],
-            "content": item[5],
-            "member": item[6].split(","),
-            "callback": callback
-        })
-
-def run_in_loop(task):
-    loop = get_loop()
-    future = asyncio.run_coroutine_threadsafe(task, loop)
-    return future.result()
-
-def worker():
+def worker(task_queue, report):
     while True:
-        task =  task_queue.get()
+        task = task_queue.get()
         print("task: ", task["name"])
         consumption(task)
+        print("task: ", task["name"], "done")
+        report(task["callback"]("task-size", task_queue.qsize()))
         task_queue.task_done()
     
 def consumption(task):
-    run_in_loop(task["callback"]("execute-info", "start"))
-    send_wx_message(task)
+    report(task["callback"]("execute-info", "start"))
+    # send_wx_message(task)
 
 def send_wx_message(task):
     """
@@ -81,7 +52,7 @@ def send_wx_message(task):
         time.sleep(1)
         pg.hotkey(*open_wchat)
 
-        run_in_loop(task["callback"]("execute-info", "success"))
+        report(task["callback"]("execute-info", "success"))
     except Exception as e:
-        run_in_loop(task["callback"]("execute-error", "error: {}".format(e)))
+        report(task["callback"]("execute-error", "error: {}".format(e)))
 

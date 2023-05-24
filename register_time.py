@@ -2,8 +2,6 @@ import threading
 import time
 import schedule
 
-from runTask import push
-
 lock = threading.RLock()
 
 class Synchronized():
@@ -23,6 +21,12 @@ class RegisterTimeError(Exception):
 
 class RegisterTime:
     __time_table = {}
+
+    push = None
+
+    def __init__(self, push):
+        self.push = push
+        pass
 
     @Synchronized()
     def add(self, task):
@@ -50,20 +54,21 @@ class RegisterTime:
         
 
     def conversion_time(self, stamp):
-        timeS = time.localtime(stamp)
+        # stamp 是时间戳
+        timeS = time.localtime(stamp / 1000)
         return time.strftime("%H:%M", timeS)
 
     def __addSchedule(self, task):
         job = None
         if (task["type"] == "fixTime"):
             try:
-                job = schedule.every().day.at(self.conversion_time(task["time"])).do(self.__wrap(push, task))
+                job = schedule.every().day.at(self.conversion_time(task["time"])).do(self.__wrap(task))
                 print("add fixTime task: ", task["name"])
             except:
                 raise RegisterTimeError("task time format error", task)
         else:
             try:
-                job = schedule.every(int(task["time"])).seconds.do(self.__wrap(push, task))
+                job = schedule.every(int(task["time"])).seconds.do(self.__wrap(task))
                 print("add intervalTime task: ", task["name"])
             except:
                 raise RegisterTimeError("task time format error", task)
@@ -72,10 +77,10 @@ class RegisterTime:
     def __removeSchedule(self, job):
         schedule.cancel_job(job)
     
-    def __wrap(self, run, task):
+    def __wrap(self, task):
         def inner():
             try:
-                run(task)
+                self.push(task)
             except Exception as e:
                 print("running error: ", e)
         return inner

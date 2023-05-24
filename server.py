@@ -1,30 +1,48 @@
-from loop import get_loop
 from module import register
 from runTask import init_task
-from service import websocket
+# from service import websocket
 from task import addTask, editTask, getTaskList, updateTaskStatus
 from module.mysql import TaskMySql, WechatNamesMySql
 from wx import addWxName, getWxNameList;
 
-def run_server(regsitertime):
-    server = websocket.WebSocketServer(9673)
+# from globals import task_queue, server, loop
 
-    print("server run")
-    loop = get_loop()
+async def init_task(server, regsitertime, task_module):
+    task_list = await task_module.get_all_status_task("progress")
+    async def callback(event, message):
+        await server.push({
+            "event": event,
+            "data": message
+        })
 
+    for item in task_list:
+        regsitertime.add({
+            "id": item[0],
+            "name": item[1],
+            "type": item[2],
+            "time": item[4],
+            "content": item[5],
+            "member": item[6].split(","),
+            "callback": callback
+        })
+
+def run_server(server, regsitertime, loop, task_queue):
     pool = loop.run_until_complete(register())
 
     task_module = TaskMySql(pool)
     wechat_name_module = WechatNamesMySql(pool)
 
-    loop.run_until_complete(task_module.init_sql())
-    loop.run_until_complete(wechat_name_module.init_sql())
+    async def init_task_func(task_module):
+        server.addModule("task", task_module)
+        await init_task(server, regsitertime, task_module)
+    
+    async def init_wechat_name_func(wechat_name_module):
+        server.addModule("wechat", wechat_name_module)
 
-    loop.run_until_complete(init_task(server, regsitertime, task_module))
+    loop.run_until_complete(task_module.init_sql(init_task_func))
+    loop.run_until_complete(wechat_name_module.init_sql(init_wechat_name_func))
 
     server.addModule("registerTime", regsitertime)
-    server.addModule("task", task_module)
-    server.addModule("wechat", wechat_name_module)
 
     server.registerHandle("/task/list", getTaskList)
     server.registerHandle("/task/add", addTask)
@@ -33,5 +51,7 @@ def run_server(regsitertime):
 
     server.registerHandle("/wxuser/add", addWxName)
     server.registerHandle("/wxuser/list", getWxNameList)
+
+    server.registerHandle("/task-size", task_queue.qsize)
     
     loop.run_until_complete(server.run())
