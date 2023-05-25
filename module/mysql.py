@@ -126,7 +126,6 @@ class WechatNamesMySql:
         await cursor.execute(query, (name,))
         # 获取新插入昵称的ID
         name_id = cursor.lastrowid
-        print(name_id)
         return name_id
     
     # 获取微信昵称列表

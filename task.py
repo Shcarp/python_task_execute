@@ -1,7 +1,8 @@
 from globals import task_queue
+from service.websocket import Ctx
 keyword = ""
 
-async def getTask(ctx):
+async def getTask(ctx: Ctx):
     global keyword
     if ( "keyword" in ctx.data):
         keyword = ctx.data["keyword"]
@@ -23,7 +24,8 @@ async def getTask(ctx):
         })
     return res
 
-async def getTaskList(ctx):
+async def getTaskList(ctx: Ctx):
+    print(ctx)
     try:
         ctx.status = 200
         ctx.body = await getTask(ctx)
@@ -33,7 +35,7 @@ async def getTaskList(ctx):
         ctx.body = "error: {}".format(e)
         await ctx.send()
 
-async def addTask(ctx):
+async def addTask(ctx: Ctx):
     try:
         insertdata = ctx.data
         insertdata["status"] = "nostarted"
@@ -43,16 +45,13 @@ async def addTask(ctx):
             "id": id
         }
         await ctx.send()
-        await ctx.serve.push({
-            "event": "task-list/update",
-            "data": await getTask(ctx)
-        })
+        await ctx.serve.push(200, "task-list/update", await getTask(ctx))
     except Exception as e:
         ctx.status = 500
         ctx.body = "error: {}".format(e)
         await ctx.send()
 
-async def editTask(ctx):
+async def editTask(ctx: Ctx):
     try:
         id = await ctx.serve.task.update_task(ctx.data)
         ctx.serve.task.update_task_status(ctx.data["id"], "nostarted")
@@ -61,10 +60,7 @@ async def editTask(ctx):
             "id": id
         }
         await ctx.send()
-        await ctx.serve.push({
-            "event": "task-list/update",
-            "data": await getTask(ctx)
-        })
+        await ctx.serve.push(200, "task-list/update", await getTask(ctx))
     except Exception as e:
         ctx.status = 500
         ctx.body = "error: {}".format(e)
@@ -72,13 +68,7 @@ async def editTask(ctx):
 
 
 
-async def updateTaskStatus(ctx):
-
-    async def callback(event, message):
-        await ctx.serve.push({
-            "event": event,
-            "data": message
-        })
+async def updateTaskStatus(ctx: Ctx):
 
     try:
         task = await ctx.serve.task.get_task_by_id(ctx.data["id"])
@@ -90,7 +80,6 @@ async def updateTaskStatus(ctx):
             "time": task[4],
             "content": task[5],
             "member": task[6].split(","),
-            "callback": callback
         }
         # 如果 状态修改为进行中，那么就要把任务添加到定时任务中
         if (ctx.data["status"] == "progress"):
@@ -120,10 +109,7 @@ async def updateTaskStatus(ctx):
             "id": ctx.data["id"]
         }
         await ctx.send()
-        await ctx.serve.push({
-            "event": "task-list/update",
-            "data": await getTask(ctx)
-        })
+        await ctx.serve.push(200, "task-list/update", await getTask(ctx))
     except Exception as e:
         ctx.status = 500
         ctx.body = "error: {}".format(e)

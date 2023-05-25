@@ -1,18 +1,16 @@
 from module import register
-from run_task import init_task
 from task import addTask, editTask, getTaskList, updateTaskStatus
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from module.mysql import TaskMySql, WechatNamesMySql
 from wx import addWxName, getWxNameList;
 
-from globals import get_loop, task_queue, server
+from globals import Info, get_loop, task_queue, server, info_queue
 
-async def init_task(server, regsitertime, task_module):
+loop = get_loop()
+scheduler = AsyncIOScheduler(event_loop=loop)
+
+async def init_task(regsitertime, task_module):
     task_list = await task_module.get_all_status_task("progress")
-    async def callback(event, message):
-        await server.push({
-            "event": event,
-            "data": message
-        })
 
     for item in task_list:
         regsitertime.add({
@@ -22,11 +20,20 @@ async def init_task(server, regsitertime, task_module):
             "time": item[4],
             "content": item[5],
             "member": item[6].split(","),
-            "callback": callback
         })
 
+@scheduler.scheduled_job('interval', seconds=1)
+async def send_server_message():
+    try:
+        message = info_queue.get_nowait()
+        if (type(message) == Info):
+            await server.push(message.status, "info", message.body)
+        else:
+            await server.push(200, "other", message)
+    except Exception as e:
+        pass
+
 def run_server(regsitertime):
-    loop = get_loop()
     pool = loop.run_until_complete(register())
 
     task_module = TaskMySql(pool)
@@ -34,7 +41,7 @@ def run_server(regsitertime):
 
     async def init_task_func(task_module):
         server.addModule("task", task_module)
-        await init_task(server, regsitertime, task_module)
+        await init_task(regsitertime, task_module)
     
     async def init_wechat_name_func(wechat_name_module):
         server.addModule("wechat", wechat_name_module)
@@ -52,6 +59,9 @@ def run_server(regsitertime):
     server.registerHandle("/wxuser/add", addWxName)
     server.registerHandle("/wxuser/list", getWxNameList)
 
+    scheduler.start()
+
     server.registerHandle("/task-size", task_queue.qsize)
     
     loop.run_until_complete(server.run())
+

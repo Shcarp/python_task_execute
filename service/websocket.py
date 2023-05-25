@@ -1,27 +1,25 @@
 import asyncio
-import json
 import os
+import time
+from service.oprotocol import Push, Request, Response
 import websockets
 from typing import Callable
-from websockets.server import serve
-
-# from utils import parse_json
+from websockets.server import serve, WebSocketServerProtocol
 
 class Ctx:
     __send = 0
-    __socket = None
-    __sequence = 0
-    __serve = None
+    __socket: WebSocketServerProtocol = None
+    __serve: 'WebSocketServer' = None
 
-    __data = None
+    __request: Request = None
+
     __body = None
     __status = 200
 
-    def __init__(self, serve, sequence, data, socket) -> None:
+    def __init__(self, serve, socket, request) -> None:
         self.__serve = serve
-        self.__sequence = sequence
-        self.__data = data
         self.__socket = socket
+        self.__request = request
 
     @property
     def serve(self):
@@ -29,11 +27,11 @@ class Ctx:
     
     @property
     def data(self): 
-        return self.__data
+        return self.__request.data
     
     @property
     def url(self):
-        return self.data["url"]
+        return self.__request.url
     
     @property
     def body(self):
@@ -54,27 +52,18 @@ class Ctx:
     async def send(self):
         if (self.__send == 1):
             return
-        recvData = {
-            "type": "response",
-            "sequence": self.__sequence,
-            "status": self.__status,
-            "data": self.__body
-        }
-        await self.__socket.send(json.dumps(recvData))
+        response = Response(self.__request.sequence, self.__status, time.time(), self.__body)
+        await self.__socket.send(response.toJSON())
         self.__send = 1
     
-    async def push(self, message):
-        recvData = {
-            "type": "push",
-            "status": 200,
-            "data": message
-        }
-        await self.__socket.send(json.dumps(recvData))
+    async def push(self, status, event, message):
+        push = Push(status=status,sendTime=time.time() ,event=event, data=message)
+        await self.__socket.send(push.toJSON())
 
 
 class WebSocketConnection:
-    __socket = None
-    __serve = None
+    __socket: WebSocketServerProtocol = None
+    __serve: 'WebSocketServer' = None
     
     def __init__(self, serve, socket):
         self.__serve = serve
@@ -86,21 +75,17 @@ class WebSocketConnection:
 
     async def handleMessage(self):
         async for data in self.socket:
-            print(data)
-            pdata = json.loads(data)
-            ctx = Ctx(self.__serve, pdata["sequence"], pdata["data"]["data"], self.socket)
-            handles = await self.__serve.getHandles(pdata["data"]["url"])
-            print(handles)
+            request: Request = Request.fromJSON(data)
+            ctx = Ctx(self.__serve, self.socket, request)
+            handles = await self.__serve.getHandles(request.url)
+            if (handles == None):
+                continue
             for handle in handles:
                 await handle(ctx)
 
-    async def push(self, message):
-        recvData = {
-            "type": "push",
-            "status": 200,
-            "data": message
-        }
-        await self.__socket.send(json.dumps(recvData))
+    async def push(self, status, event, message):
+        push = Push(status=status,sendTime=time.time() ,event=event, data=message)
+        await self.__socket.send(push.toJSON())
 
 class WebSocketServer:
     __connections = set()
@@ -143,7 +128,7 @@ class WebSocketServer:
         '''
         return self.__handleDirectory.get(identification, [])
 
-    async def handleConnect(self, websocket):
+    async def handleConnect(self, websocket: WebSocketServerProtocol):
         '''
             处理连接
         '''
@@ -152,22 +137,26 @@ class WebSocketServer:
         self.__CONNECT.add(websocket)
         try:
             await connection.handleMessage()
-            await websocket.await_closed()
         except Exception as e:
-            print(e)
+            await self.pushSingle(websocket, 500, "error", "server error: {}".format(e))
         finally:
             self.__connections.remove(connection)
             self.__CONNECT.remove(websocket)
+    
+    async def pushSingle(self, websocket: WebSocketServerProtocol, status, event, message):
+        '''
+            发送消息
+        '''
+        push = Push(status=status,sendTime=time.time() ,event=event, data=message)
+
+        await websocket.send(push.toJSON())
         
     
-    async def push(self, message):
+    async def push(self, status, event, message):
         '''
             推送消息
         '''
-        recvData = {
-            "type": "push",
-            "status": 200,
-            "data": message
-        }
+        push = Push(status=status,sendTime=time.time() ,event=event, data=message)
 
-        websockets.broadcast(self.__CONNECT, json.dumps(recvData))
+        data = push.toJSON()
+        websockets.broadcast(self.__CONNECT, data)
