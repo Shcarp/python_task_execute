@@ -60,7 +60,7 @@ class RegisterTime:
         if (task["type"] == "fixTime"):
             try:
                 # 如果callback不为空，那么就要把callback传入到job中
-                # job = schedule.every().day.at(self.conversion_time(task["time"])).do(self.__wrap(callable , task))
+                job = schedule.every().day.at(self.conversion_time(task["time"])).do(self.__wrap(callable , task))
                 print("add fixTime task: ", task["name"])
             except:
                 raise RegisterTimeError("task time format error", task)
