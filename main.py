@@ -1,3 +1,5 @@
+import os
+import sys
 import time
 import threading
 import schedule
@@ -19,4 +21,14 @@ def main():
         time.sleep(1)
 
 if __name__ == "__main__":
-    main()
+    while True:
+        try:
+            main()
+        except KeyboardInterrupt:
+            print("exit")
+            break
+        except Exception as e:
+            # handle the exception here
+            print("Error:", e)
+            # restart the program
+            os.execv(__file__, sys.argv)

@@ -1,10 +1,9 @@
+import task;
+import wx;
 from module import register
-from task import addTask, editTask, getTaskList, updateTaskStatus
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from module.mysql import TaskMySql, WechatNamesMySql
-from wx import addWxName, getWxNameList;
-
-from globals import Info, get_loop, task_queue, server, info_queue
+from globals import Info, get_loop, server, info_queue, InfoType
 
 loop = get_loop()
 scheduler = AsyncIOScheduler(event_loop=loop)
@@ -22,15 +21,17 @@ async def init_task(regsitertime, task_module):
             "member": item[6].split(","),
         })
 
-@scheduler.scheduled_job('interval', seconds=1)
+@scheduler.scheduled_job('interval', seconds=2)
 async def send_server_message():
     try:
         message = info_queue.get_nowait()
-        if (type(message) == Info):
-            await server.push(message.status, "info", message.body)
+        if (isinstance(message, Info)):
+            await server.push(InfoType.Success, "info", message.body)
         else:
-            await server.push(200, "other", message)
+            await server.push(InfoType.Success, "other", message)
     except Exception as e:
+        if (e.__class__.__name__ != "Empty"):
+            print(e)
         pass
 
 def run_server(regsitertime):
@@ -51,17 +52,7 @@ def run_server(regsitertime):
 
     server.addModule("registerTime", regsitertime)
 
-    server.registerHandle("/task/list", getTaskList)
-    server.registerHandle("/task/add", addTask)
-    server.registerHandle("/task/edit", editTask)
-    server.registerHandle("/task/update", updateTaskStatus)
-
-    server.registerHandle("/wxuser/add", addWxName)
-    server.registerHandle("/wxuser/list", getWxNameList)
-
     scheduler.start()
-
-    server.registerHandle("/task-size", task_queue.qsize)
     
     loop.run_until_complete(server.run())
 

@@ -44,4 +44,4 @@ async def register():
         print(ex)
         return False
 
-
+# pool = loop.run_until_complete(register())

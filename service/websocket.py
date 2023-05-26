@@ -108,15 +108,19 @@ class WebSocketServer:
         async with serve(self.handleConnect, "", port):
             await asyncio.Future()
         
-    def registerHandle(self, identification, func: Callable[[Ctx], None]):
+    def registerHandle(self, identification):
         '''
             注册处理函数
         '''
-        handles = self.__handleDirectory.get(identification, [])
-        handles.append(func)
-        self.__handleDirectory[identification] = handles
+        def decorator(func: Callable[[Ctx], None]):
+            handles = self.__handleDirectory.get(identification, [])
+            handles.append(func)
+            self.__handleDirectory[identification] = handles
+            return func
+        return decorator
 
     def addModule(self, name, module):
+        # 改造成装饰器
         '''
             添加模块
         '''
@@ -156,7 +160,7 @@ class WebSocketServer:
         '''
             推送消息
         '''
-        push = Push(status=status,sendTime=time.time() ,event=event, data=message)
+        push = Push(status, time.time(), event, message)
 
         data = push.toJSON()
         websockets.broadcast(self.__CONNECT, data)

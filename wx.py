@@ -1,4 +1,4 @@
-
+from globals import server
 from service.websocket import Ctx
 
 async def getList(ctx: Ctx):
@@ -12,6 +12,7 @@ async def getList(ctx: Ctx):
         res.append(item[1])
     return res
 
+@server.registerHandle("/wxuser/add")
 async def addWxName(ctx: Ctx):
     try:
         id = await ctx.serve.wechat.create_wechat_name(ctx.data["wx_name"])
@@ -27,6 +28,7 @@ async def addWxName(ctx: Ctx):
         ctx.body = "error: {}".format(e)
         await ctx.send()
 
+@server.registerHandle("/wxuser/list")
 async def getWxNameList(ctx: Ctx):
     try:
         ctx.status = 200

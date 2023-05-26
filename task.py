@@ -1,4 +1,4 @@
-from globals import task_queue
+from globals import task_queue,server
 from service.websocket import Ctx
 keyword = ""
 
@@ -24,8 +24,8 @@ async def getTask(ctx: Ctx):
         })
     return res
 
+@server.registerHandle("/task/list")
 async def getTaskList(ctx: Ctx):
-    print(ctx)
     try:
         ctx.status = 200
         ctx.body = await getTask(ctx)
@@ -35,6 +35,7 @@ async def getTaskList(ctx: Ctx):
         ctx.body = "error: {}".format(e)
         await ctx.send()
 
+@server.registerHandle("/task/add")
 async def addTask(ctx: Ctx):
     try:
         insertdata = ctx.data
@@ -51,6 +52,7 @@ async def addTask(ctx: Ctx):
         ctx.body = "error: {}".format(e)
         await ctx.send()
 
+@server.registerHandle("/task/edit")
 async def editTask(ctx: Ctx):
     try:
         id = await ctx.serve.task.update_task(ctx.data)
@@ -66,8 +68,7 @@ async def editTask(ctx: Ctx):
         ctx.body = "error: {}".format(e)
         await ctx.send()
 
-
-
+@server.registerHandle("/task/update")
 async def updateTaskStatus(ctx: Ctx):
 
     try:
