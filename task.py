@@ -1,3 +1,4 @@
+import queue
 from globals import task_queue,server
 from service.websocket import Ctx
 keyword = ""
@@ -70,7 +71,6 @@ async def editTask(ctx: Ctx):
 
 @server.registerHandle("/task/update")
 async def updateTaskStatus(ctx: Ctx):
-
     try:
         task = await ctx.serve.task.get_task_by_id(ctx.data["id"])
         taskBody = {
@@ -93,10 +93,19 @@ async def updateTaskStatus(ctx: Ctx):
         elif (ctx.data["status"] == "cancel"):
             ctx.serve.registerTime.remove(taskBody)
             # 遍历任务队列，如果有任务id相同的，那么就移除
-            for item in task_queue:
-                if (item["id"] == ctx.data["id"]):
-                    task_queue.remove(item)
-
+            def removeTask():
+                new_queue = queue.Queue()
+                while not task_queue.empty():
+                    task = task_queue.get()
+                    if task.get("id") == ctx.data["id"]:
+                        task_queue.task_done()
+                    else:
+                        new_queue.put(task)
+                
+                # 将剩余的任务重新放回任务队列
+                while not new_queue.empty():
+                    task_queue.put(new_queue.get())
+            removeTask()
             
     except Exception as e:
         ctx.status = 500

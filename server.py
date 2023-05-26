@@ -1,9 +1,10 @@
-import task;
-import wx;
-from module import register
+import task
+import wechat
+from module.register import register
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from module.mysql import TaskMySql, WechatNamesMySql
-from globals import Info, get_loop, server, info_queue, InfoType
+from module.task import TaskMySql
+from module.wechat import WechatNamesMySql
+from globals import Info, get_loop, server, info_queue, InfoType, task_queue
 
 loop = get_loop()
 scheduler = AsyncIOScheduler(event_loop=loop)
@@ -32,6 +33,14 @@ async def send_server_message():
     except Exception as e:
         if (e.__class__.__name__ != "Empty"):
             print(e)
+        pass
+
+@scheduler.scheduled_job('interval', seconds=1)
+async def report_block_num():
+    try:
+        await server.push(InfoType.Success, "block_num", task_queue.qsize())
+    except Exception as e:
+        print(e)
         pass
 
 def run_server(regsitertime):

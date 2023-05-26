@@ -44,10 +44,10 @@ class RegisterTime:
             return
         try:
             job = self.__time_table[id]
-            self.__removeSchedule(job)
+            self.__removeSchedule(job, None)
             self.__time_table.pop(id)
-        except:
-            raise RegisterTimeError("remove error", task)
+        except Exception as e:
+            raise RegisterTimeError("remove error", e)
         
 
     def conversion_time(self, stamp):
@@ -60,7 +60,7 @@ class RegisterTime:
         if (task["type"] == "fixTime"):
             try:
                 # 如果callback不为空，那么就要把callback传入到job中
-                job = schedule.every().day.at(self.conversion_time(task["time"])).do(self.__wrap(callable , task))
+                # job = schedule.every().day.at(self.conversion_time(task["time"])).do(self.__wrap(callable , task))
                 print("add fixTime task: ", task["name"])
             except:
                 raise RegisterTimeError("task time format error", task)
