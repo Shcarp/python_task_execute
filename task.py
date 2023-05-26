@@ -57,7 +57,7 @@ async def addTask(ctx: Ctx):
 async def editTask(ctx: Ctx):
     try:
         id = await ctx.serve.task.update_task(ctx.data)
-        ctx.serve.task.update_task_status(ctx.data["id"], "nostarted")
+        await ctx.serve.task.update_task_status(ctx.data["id"], "nostarted")
         ctx.status = 200
         ctx.body = {
             "id": id
