@@ -2,16 +2,18 @@ import queue
 from globals import task_queue,server
 from service.websocket import Ctx
 keyword = ""
+status = 0
 
 async def getTask(ctx: Ctx):
-    global keyword
-    if ( "keyword" in ctx.data):
-        keyword = ctx.data["keyword"]
-
     list = await ctx.serve.task.get_task_list({
-            "keyword": keyword
+            "keyword": keyword,
+            "status": status
         })
-
+    
+    # 获取所有运行中的任务
+    running_task: tuple = await ctx.serve.task.get_all_status_task(2)
+    # 获取数量
+    running_count = len(running_task)
     res = []
     for item in list:
         res.append({
@@ -21,15 +23,25 @@ async def getTask(ctx: Ctx):
             "status": item[3],
             "time": item[4],
             "content": item[5],
-            "member": item[6].split(",")
+            "member": item[6].split(","),
         })
-    return res
+    return (res, running_count)
 
 @server.registerHandle("/task/list")
 async def getTaskList(ctx: Ctx):
     try:
+        global status, keyword
+        if ( "status" in ctx.data):
+            status = ctx.data["status"]
+        if ( "keyword" in ctx.data):
+            keyword = ctx.data["keyword"]
+
+        (list, running_count) = await getTask(ctx)
         ctx.status = 200
-        ctx.body = await getTask(ctx)
+        ctx.body = {
+            "list": list,
+            "running_count": running_count
+        }
         await ctx.send()
     except Exception as e:
         ctx.status = 500
@@ -40,14 +52,18 @@ async def getTaskList(ctx: Ctx):
 async def addTask(ctx: Ctx):
     try:
         insertdata = ctx.data
-        insertdata["status"] = "nostarted"
         id = await ctx.serve.task.create_task(insertdata)
         ctx.status = 200
         ctx.body = {
             "id": id
         }
         await ctx.send()
-        await ctx.serve.push(200, "task-list/update", await getTask(ctx))
+        (list, running_count) = await getTask(ctx)
+        body = {
+            "list": list,
+            "running_count": running_count
+        }
+        await ctx.serve.push(200, "task-list/update", body)
     except Exception as e:
         ctx.status = 500
         ctx.body = "error: {}".format(e)
@@ -57,13 +73,18 @@ async def addTask(ctx: Ctx):
 async def editTask(ctx: Ctx):
     try:
         id = await ctx.serve.task.update_task(ctx.data)
-        await ctx.serve.task.update_task_status(ctx.data["id"], "nostarted")
+        await ctx.serve.task.update_task_status(ctx.data["id"], 1)
         ctx.status = 200
         ctx.body = {
             "id": id
         }
         await ctx.send()
-        await ctx.serve.push(200, "task-list/update", await getTask(ctx))
+        (list, running_count) = await getTask(ctx)
+        body = {
+            "list": list,
+            "running_count": running_count
+        }
+        await ctx.serve.push(200, "task-list/update", body)
     except Exception as e:
         ctx.status = 500
         ctx.body = "error: {}".format(e)
@@ -83,14 +104,14 @@ async def updateTaskStatus(ctx: Ctx):
             "member": task[6].split(","),
         }
         # 如果 状态修改为进行中，那么就要把任务添加到定时任务中
-        if (ctx.data["status"] == "progress"):
+        if (ctx.data["status"] == 2):
             ## 获取任务信息
             ctx.serve.registerTime.add(taskBody)
         # 如果 状态修改为未开始，那么就要把任务从定时任务中移除
-        elif (ctx.data["status"] == "nostarted"):
+        elif (ctx.data["status"] == 1):
             ctx.serve.registerTime.remove(taskBody)
         # 如果取消任务，那么就要把任务从定时任务中移除
-        elif (ctx.data["status"] == "cancel"):
+        elif (ctx.data["status"] == 4):
             ctx.serve.registerTime.remove(taskBody)
             # 遍历任务队列，如果有任务id相同的，那么就移除
             def removeTask():
@@ -119,7 +140,12 @@ async def updateTaskStatus(ctx: Ctx):
             "id": ctx.data["id"]
         }
         await ctx.send()
-        await ctx.serve.push(200, "task-list/update", await getTask(ctx))
+        (list, running_count) = await getTask(ctx)
+        body = {
+            "list": list,
+            "running_count": running_count
+        }
+        await ctx.serve.push(200, "task-list/update", body)
     except Exception as e:
         ctx.status = 500
         ctx.body = "error: {}".format(e)

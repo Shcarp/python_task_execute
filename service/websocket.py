@@ -142,7 +142,7 @@ class WebSocketServer:
         try:
             await connection.handleMessage()
         except Exception as e:
-            await self.pushSingle(websocket, 500, "error", "server error: {}".format(e))
+            print("server error: {}".format(e))
         finally:
             self.__connections.remove(connection)
             self.__CONNECT.remove(websocket)

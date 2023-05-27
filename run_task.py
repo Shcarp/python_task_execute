@@ -23,7 +23,8 @@ def worker():
 def consumption(task):
     try:
         push(InfoType.Success, "start task: {}".format(task.get("name")))
-        send_wx_message(task)
+        # send_wx_message(task)
+        time.sleep(2)
         push(InfoType.Success, "run task {} success".format(task.get("name")))
     except Exception as e:
         push(InfoType.ERROR, "error: {}".format(e))

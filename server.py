@@ -10,7 +10,7 @@ loop = get_loop()
 scheduler = AsyncIOScheduler(event_loop=loop)
 
 async def init_task(regsitertime, task_module):
-    task_list = await task_module.get_all_status_task("progress")
+    task_list = await task_module.get_all_status_task(2)
 
     for item in task_list:
         regsitertime.add({
@@ -22,7 +22,7 @@ async def init_task(regsitertime, task_module):
             "member": item[6].split(","),
         })
 
-@scheduler.scheduled_job('interval', seconds=2)
+@scheduler.scheduled_job('interval', seconds=5)
 async def send_server_message():
     try:
         message = info_queue.get_nowait()
@@ -35,7 +35,7 @@ async def send_server_message():
             print(e)
         pass
 
-@scheduler.scheduled_job('interval', seconds=1)
+@scheduler.scheduled_job('interval', seconds=5)
 async def report_block_num():
     try:
         await server.push(InfoType.Success, "block_num", task_queue.qsize())
@@ -60,8 +60,15 @@ def run_server(regsitertime):
     loop.run_until_complete(wechat_name_module.init_sql(init_wechat_name_func))
 
     server.addModule("registerTime", regsitertime)
-
-    scheduler.start()
-    
-    loop.run_until_complete(server.run())
+    try:
+        scheduler.start()
+        loop.run_until_complete(server.run())
+    except KeyboardInterrupt:
+        pass
+    except Exception as e:
+        print("server start error: {}".format(e))
+    finally:
+        scheduler.shutdown()
+        loop.run_until_complete(pool.close())
+        loop.close()
 

@@ -1,9 +1,10 @@
 import threading
 import time
 import schedule
-from globals import get_loop
+from service.oprotocol import InfoType
 
 from task_queue import push
+from info_queue import push as info_push
 
 lock = threading.RLock()
 
@@ -61,15 +62,15 @@ class RegisterTime:
             try:
                 # 如果callback不为空，那么就要把callback传入到job中
                 job = schedule.every().day.at(self.conversion_time(task["time"])).do(self.__wrap(callable , task))
-                print("add fixTime task: ", task["name"])
-            except:
-                raise RegisterTimeError("task time format error", task)
+                info_push(InfoType.Success, "add fixTime task: " + task["name"])
+            except Exception as e:
+                info_push(InfoType.ERROR, "add fixTime task error: {}".format(e))
         else:
             try:
                 job = schedule.every(int(task["time"])).seconds.do(self.__wrap(callable, task))
-                print("add intervalTime task: ", task["name"])
-            except:
-                raise RegisterTimeError("task time format error", task)
+                info_push(InfoType.Success, "add intervalTime task: " + task["name"])
+            except Exception as e:
+                info_push(InfoType.ERROR, "add intervalTime task error: {}".format(e))
         return job
     
     def __removeSchedule(self, job, callable):

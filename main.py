@@ -29,6 +29,6 @@ if __name__ == "__main__":
             break
         except Exception as e:
             # handle the exception here
-            print("Error:", e)
+            print("Error: {}".format(e))
             # restart the program
             os.execv(__file__, sys.argv)

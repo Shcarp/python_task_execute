@@ -1,6 +1,5 @@
 from module.mysql import TransactionDecorator
 
-
 class TaskMySql:
     pool = None
     def __init__(self, pool) -> None:
@@ -21,7 +20,7 @@ class TaskMySql:
         # 判断任务表是否存在，不存在则创建
         await cursor.execute("SHOW TABLES LIKE 'task'")
         if (cursor.fetchone().result() is None):
-            await cursor.execute("CREATE TABLE task ( id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(100) NOT NULL,type VARCHAR(50),status VARCHAR(50),time BIGINT,content TEXT,member VARCHAR(200))")
+            await cursor.execute("CREATE TABLE task ( id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(100) NOT NULL,type VARCHAR(50),status INT,time BIGINT,content TEXT,member VARCHAR(200))")
         if init_func is not None:
             await init_func(self)
 
@@ -37,8 +36,17 @@ class TaskMySql:
     # 获取任务列表
     @TransactionDecorator
     async def get_task_list(self, cursor, data):
-        query = "select * from task where name like '%"+data["keyword"]+"%' order by id desc"
-        await cursor.execute(query)
+
+        query = "SELECT * FROM task WHERE name LIKE %s"
+        params = ['%' + data['keyword'] + '%']
+
+        if data['status'] != 0:
+            query += " AND status = %s"
+            params.append(data['status'])
+
+        query += " ORDER BY status ASC, id DESC;"
+
+        await cursor.execute(query, params)
         task_list = cursor.fetchall()
         return task_list.result()
     
