@@ -5,6 +5,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from module.task import TaskMySql
 from module.wechat import WechatNamesMySql
 from globals import Info, get_loop, server, info_queue, InfoType, task_queue
+from service.wrap_pb import InfoType
 
 loop = get_loop()
 scheduler = AsyncIOScheduler(event_loop=loop)

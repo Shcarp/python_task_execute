@@ -1,10 +1,12 @@
 import asyncio
 import os
 import time
+from service import message_pb2 as pb
 from service.oprotocol import Push, Request, Response
+from service import wrap_pb as wpb
 import websockets
 from typing import Callable
-from websockets.server import serve, WebSocketServerProtocol
+from websockets.server import serve, WebSocketServerProtocol 
 
 class Ctx:
     __send = 0
@@ -160,7 +162,22 @@ class WebSocketServer:
         '''
             推送消息
         '''
-        push = Push(status, time.time(), event, message)
+        # push = Push(status, time.time(), event, message)
+        # pushdata = pb.Push()
+        # pushdata.status = status.value
+        # pushdata.sendTime = time.time()
+        # pushdata.event = event
 
-        data = push.toJSON()
-        websockets.broadcast(self.__CONNECT, data)
+        # body = pb.Body()
+        # body.type = pb.DataType.number
+        # body.value = str(message)
+
+        # pushdata.data.CopyFrom(body)
+
+        # data = pushdata.SerializeToString()
+        print("push: {}".format(message))
+        
+        sendData = wpb.Push(status=status.value, sendTime=time.time(), event=event, data=message).serialize()
+        print("push: {}".format(sendData))
+
+        websockets.broadcast(self.__CONNECT, sendData)
