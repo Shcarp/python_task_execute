@@ -11,7 +11,7 @@ class DataType(Enum):
     JSON = pb.DataType.json
 
 class InfoType(Enum):
-    Success = pb.InfoType.Success
+    SUCCESS = pb.InfoType.SUCCESS
     ERROR = pb.InfoType.ERROR
     WARN = pb.InfoType.WARN
 
@@ -103,7 +103,7 @@ class Push:
         push = pb.Push()
         push.type = self.type
         push.event = self.event
-        push.status = self.status
+        push.status = self.status.value
         push.sendTime = self.sendTime
 
         def assignment(type, data):

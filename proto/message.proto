@@ -15,7 +15,7 @@ message Body {
 }
 
 enum InfoType {
-  Success = 0;
+  SUCCESS = 0;
   ERROR = 1;
   WARN = 2;
 }

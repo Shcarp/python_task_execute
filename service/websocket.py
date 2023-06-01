@@ -1,9 +1,7 @@
 import asyncio
 import os
 import time
-from service import message_pb2 as pb
-from service.oprotocol import Push, Request, Response
-from service import wrap_pb as wpb
+from service.wrap_pb import Push, Request, Response
 import websockets
 from typing import Callable
 from websockets.server import serve, WebSocketServerProtocol 
@@ -18,7 +16,7 @@ class Ctx:
     __body = None
     __status = 200
 
-    def __init__(self, serve, socket, request) -> None:
+    def __init__(self, serve, socket, request: Request) -> None:
         self.__serve = serve
         self.__socket = socket
         self.__request = request
@@ -29,7 +27,7 @@ class Ctx:
     
     @property
     def data(self): 
-        return self.__request.data
+        return self.__request.data.value
     
     @property
     def url(self):
@@ -55,12 +53,12 @@ class Ctx:
         if (self.__send == 1):
             return
         response = Response(self.__request.sequence, self.__status, time.time(), self.__body)
-        await self.__socket.send(response.toJSON())
+        await self.__socket.send(response.serialize())
         self.__send = 1
     
     async def push(self, status, event, message):
-        push = Push(status=status,sendTime=time.time() ,event=event, data=message)
-        await self.__socket.send(push.toJSON())
+        sendData = Push(status=status, sendTime=time.time(), event=event, data=message)
+        await self.__socket.send(sendData.serialize())
 
 
 class WebSocketConnection:
@@ -77,7 +75,7 @@ class WebSocketConnection:
 
     async def handleMessage(self):
         async for data in self.socket:
-            request: Request = Request.fromJSON(data)
+            request: Request = Request.parse(data)
             ctx = Ctx(self.__serve, self.socket, request)
             handles = await self.__serve.getHandles(request.url)
             if (handles == None):
@@ -86,8 +84,8 @@ class WebSocketConnection:
                 await handle(ctx)
 
     async def push(self, status, event, message):
-        push = Push(status=status,sendTime=time.time() ,event=event, data=message)
-        await self.__socket.send(push.toJSON())
+        push = Push(status=status, sendTime=time.time() ,event=event, data=message)
+        await self.__socket.send(push.serialize())
 
 class WebSocketServer:
     __connections = set()
@@ -145,7 +143,7 @@ class WebSocketServer:
             await connection.handleMessage()
         except Exception as e:
             print("server error: {}".format(e))
-        finally:
+        finally: 
             self.__connections.remove(connection)
             self.__CONNECT.remove(websocket)
     
@@ -153,31 +151,16 @@ class WebSocketServer:
         '''
             发送消息
         '''
-        push = Push(status=status,sendTime=time.time() ,event=event, data=message)
+        sendData = Push(status=status, sendTime=time.time() ,event=event, data=message).serialize()
 
-        await websocket.send(push.toJSON())
+        await websocket.send(sendData)
         
     
     async def push(self, status, event, message):
         '''
             推送消息
         '''
-        # push = Push(status, time.time(), event, message)
-        # pushdata = pb.Push()
-        # pushdata.status = status.value
-        # pushdata.sendTime = time.time()
-        # pushdata.event = event
 
-        # body = pb.Body()
-        # body.type = pb.DataType.number
-        # body.value = str(message)
-
-        # pushdata.data.CopyFrom(body)
-
-        # data = pushdata.SerializeToString()
-        print("push: {}".format(message))
-        
-        sendData = wpb.Push(status=status.value, sendTime=time.time(), event=event, data=message).serialize()
-        print("push: {}".format(sendData))
+        sendData = Push(status=status, sendTime=time.time(), event=event, data=message).serialize()
 
         websockets.broadcast(self.__CONNECT, sendData)
