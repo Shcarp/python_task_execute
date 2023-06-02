@@ -1,7 +1,7 @@
 import asyncio
 import os
 import time
-from service.wrap_pb import Push, Request, Response
+from service.wrap_pb import MessageType, Push, Request, Response
 import websockets
 from typing import Callable
 from websockets.server import serve, WebSocketServerProtocol 
@@ -52,12 +52,12 @@ class Ctx:
     async def send(self):
         if (self.__send == 1):
             return
-        response = Response(self.__request.sequence, self.__status, time.time(), self.__body)
+        response = MessageType.RESPONSE.value +  Response(self.__request.sequence, self.__status, time.time(), self.__body)
         await self.__socket.send(response.serialize())
         self.__send = 1
     
     async def push(self, status, event, message):
-        sendData = Push(status=status, sendTime=time.time(), event=event, data=message)
+        sendData = MessageType.PUSH.value +  Push(status=status, sendTime=time.time(), event=event, data=message)
         await self.__socket.send(sendData.serialize())
 
 
@@ -75,16 +75,22 @@ class WebSocketConnection:
 
     async def handleMessage(self):
         async for data in self.socket:
-            request: Request = Request.parse(data)
-            ctx = Ctx(self.__serve, self.socket, request)
-            handles = await self.__serve.getHandles(request.url)
-            if (handles == None):
+            if isinstance(data, bytes) == False:
+                self.socket.send("data type error")
                 continue
-            for handle in handles:
-                await handle(ctx)
+            index = 0
+            if (data[index] == MessageType.REQUEST.value):
+                index += 1
+                request: Request = Request.parse(data[index:])
+                ctx = Ctx(self.__serve, self.socket, request)
+                handles = await self.__serve.getHandles(request.url)
+                if (handles == None):
+                    continue
+                for handle in handles:
+                    await handle(ctx)
 
     async def push(self, status, event, message):
-        push = Push(status=status, sendTime=time.time() ,event=event, data=message)
+        push = MessageType.PUSH.value +  Push(status=status, sendTime=time.time() ,event=event, data=message)
         await self.__socket.send(push.serialize())
 
 class WebSocketServer:
@@ -151,7 +157,7 @@ class WebSocketServer:
         '''
             发送消息
         '''
-        sendData = Push(status=status, sendTime=time.time() ,event=event, data=message).serialize()
+        sendData = MessageType.PUSH.value +  Push(status=status, sendTime=time.time() ,event=event, data=message).serialize()
 
         await websocket.send(sendData)
         
@@ -161,6 +167,6 @@ class WebSocketServer:
             推送消息
         '''
 
-        sendData = Push(status=status, sendTime=time.time(), event=event, data=message).serialize()
+        sendData = MessageType.PUSH.value + Push(status=status, sendTime=time.time(), event=event, data=message).serialize()
 
         websockets.broadcast(self.__CONNECT, sendData)

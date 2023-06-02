@@ -4,6 +4,11 @@ import json
 from typing import Any
 from service import message_pb2 as pb
 
+class MessageType(Enum):
+    PUSH = b'1'
+    REQUEST = b'2'
+    RESPONSE = b'3'
+
 class DataType(Enum):
     NUMBER = pb.DataType.number
     STRING = pb.DataType.string
