@@ -1,6 +1,7 @@
 import queue
 from globals import task_queue,server
 from service.websocket import Ctx
+from service.wrap_pb import InfoType, Status
 keyword = ""
 status = 0
 
@@ -37,14 +38,14 @@ async def getTaskList(ctx: Ctx):
             keyword = ctx.data["keyword"]
 
         (list, running_count) = await getTask(ctx)
-        ctx.status = 200
+        ctx.status = Status.OK
         ctx.body = {
             "list": list,
             "running_count": running_count
         }
         await ctx.send()
     except Exception as e:
-        ctx.status = 500
+        ctx.status = Status.INTERNAL_SERVER_ERROR
         ctx.body = "error: {}".format(e)
         await ctx.send()
 
@@ -53,7 +54,7 @@ async def addTask(ctx: Ctx):
     try:
         insertdata = ctx.data
         id = await ctx.serve.task.create_task(insertdata)
-        ctx.status = 200
+        ctx.status = Status.OK
         ctx.body = {
             "id": id
         }
@@ -63,9 +64,9 @@ async def addTask(ctx: Ctx):
             "list": list,
             "running_count": running_count
         }
-        await ctx.serve.push(200, "task-list/update", body)
+        await ctx.serve.push(InfoType.Success, "task-list/update", body)
     except Exception as e:
-        ctx.status = 500
+        ctx.status = Status.INTERNAL_SERVER_ERROR
         ctx.body = "error: {}".format(e)
         await ctx.send()
 
@@ -74,7 +75,7 @@ async def editTask(ctx: Ctx):
     try:
         id = await ctx.serve.task.update_task(ctx.data)
         await ctx.serve.task.update_task_status(ctx.data["id"], 1)
-        ctx.status = 200
+        ctx.status = Status.OK
         ctx.body = {
             "id": id
         }
@@ -84,7 +85,7 @@ async def editTask(ctx: Ctx):
             "list": list,
             "running_count": running_count
         }
-        await ctx.serve.push(200, "task-list/update", body)
+        await ctx.serve.push(InfoType.Success, "task-list/update", body)
     except Exception as e:
         ctx.status = 500
         ctx.body = "error: {}".format(e)

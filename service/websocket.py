@@ -1,10 +1,10 @@
 import asyncio
 import os
 import time
-from service.oprotocol import Push, Request, Response
+from service.wrap_pb import MessageType, Push, Request, Response
 import websockets
 from typing import Callable
-from websockets.server import serve, WebSocketServerProtocol
+from websockets.server import serve, WebSocketServerProtocol 
 
 class Ctx:
     __send = 0
@@ -16,7 +16,7 @@ class Ctx:
     __body = None
     __status = 200
 
-    def __init__(self, serve, socket, request) -> None:
+    def __init__(self, serve, socket, request: Request) -> None:
         self.__serve = serve
         self.__socket = socket
         self.__request = request
@@ -27,7 +27,7 @@ class Ctx:
     
     @property
     def data(self): 
-        return self.__request.data
+        return self.__request.data.value
     
     @property
     def url(self):
@@ -52,13 +52,13 @@ class Ctx:
     async def send(self):
         if (self.__send == 1):
             return
-        response = Response(self.__request.sequence, self.__status, time.time(), self.__body)
-        await self.__socket.send(response.toJSON())
+        response = MessageType.RESPONSE.value +  Response(self.__request.sequence, self.__status, time.time(), self.__body)
+        await self.__socket.send(response.serialize())
         self.__send = 1
     
     async def push(self, status, event, message):
-        push = Push(status=status,sendTime=time.time() ,event=event, data=message)
-        await self.__socket.send(push.toJSON())
+        sendData = MessageType.PUSH.value +  Push(status=status, sendTime=time.time(), event=event, data=message)
+        await self.__socket.send(sendData.serialize())
 
 
 class WebSocketConnection:
@@ -75,17 +75,23 @@ class WebSocketConnection:
 
     async def handleMessage(self):
         async for data in self.socket:
-            request: Request = Request.fromJSON(data)
-            ctx = Ctx(self.__serve, self.socket, request)
-            handles = await self.__serve.getHandles(request.url)
-            if (handles == None):
+            if isinstance(data, bytes) == False:
+                self.socket.send("data type error")
                 continue
-            for handle in handles:
-                await handle(ctx)
+            index = 0
+            if (data[index] == MessageType.REQUEST.value):
+                index += 1
+                request: Request = Request.parse(data[index:])
+                ctx = Ctx(self.__serve, self.socket, request)
+                handles = await self.__serve.getHandles(request.url)
+                if (handles == None):
+                    continue
+                for handle in handles:
+                    await handle(ctx)
 
     async def push(self, status, event, message):
-        push = Push(status=status,sendTime=time.time() ,event=event, data=message)
-        await self.__socket.send(push.toJSON())
+        push = MessageType.PUSH.value +  Push(status=status, sendTime=time.time() ,event=event, data=message)
+        await self.__socket.send(push.serialize())
 
 class WebSocketServer:
     __connections = set()
@@ -143,7 +149,7 @@ class WebSocketServer:
             await connection.handleMessage()
         except Exception as e:
             print("server error: {}".format(e))
-        finally:
+        finally: 
             self.__connections.remove(connection)
             self.__CONNECT.remove(websocket)
     
@@ -151,16 +157,16 @@ class WebSocketServer:
         '''
             发送消息
         '''
-        push = Push(status=status,sendTime=time.time() ,event=event, data=message)
+        sendData = MessageType.PUSH.value +  Push(status=status, sendTime=time.time() ,event=event, data=message).serialize()
 
-        await websocket.send(push.toJSON())
+        await websocket.send(sendData)
         
     
     async def push(self, status, event, message):
         '''
             推送消息
         '''
-        push = Push(status, time.time(), event, message)
 
-        data = push.toJSON()
-        websockets.broadcast(self.__CONNECT, data)
+        sendData = MessageType.PUSH.value + Push(status=status, sendTime=time.time(), event=event, data=message).serialize()
+
+        websockets.broadcast(self.__CONNECT, sendData)

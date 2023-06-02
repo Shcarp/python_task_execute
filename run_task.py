@@ -2,8 +2,9 @@ import asyncio
 import time
 import pyautogui as pg
 import pyperclip as pc
-from globals import InfoType, get_loop, task_queue
+from globals import get_loop, task_queue
 from info_queue import push
+from service.wrap_pb import InfoType
 
 open_wchat = ["ctrl", "alt", "w"]
 wchat_search = ["ctrl", "f"]
@@ -22,9 +23,10 @@ def worker():
     
 def consumption(task):
     try:
-        push(InfoType.Success, "start task: {}".format(task.get("name")))
-        send_wx_message(task)
-        push(InfoType.Success, "run task {} success".format(task.get("name")))
+        push(InfoType.SUCCESS, "start task: {}".format(task.get("name")))
+        # send_wx_message(task)
+        time.sleep(2)
+        push(InfoType.SUCCESS, "run task {} success".format(task.get("name")))
     except Exception as e:
         push(InfoType.ERROR, "error: {}".format(e))
 

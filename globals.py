@@ -2,7 +2,7 @@ import asyncio
 import queue
 
 from service import websocket
-from service.oprotocol import InfoType
+from service.wrap_pb import InfoType
 
 loop = None
 
@@ -19,7 +19,7 @@ task_queue = queue.Queue()
 info_queue = queue.Queue()
 
 class Info:
-    status: InfoType = InfoType.Success,
+    status: InfoType = InfoType.SUCCESS,
     body = None
     def __init__(self, message: any) -> None:
         self.body = message
@@ -27,7 +27,7 @@ class Info:
 class Success(Info):
     def __init__(self, message: any) -> None:
         super().__init__(message)
-        self.status = InfoType.Success
+        self.status = InfoType.SUCCESS
 
 class Error(Info):
     def __init__(self, message: any) -> None:

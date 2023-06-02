@@ -5,6 +5,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from module.task import TaskMySql
 from module.wechat import WechatNamesMySql
 from globals import Info, get_loop, server, info_queue, InfoType, task_queue
+from service.wrap_pb import InfoType
 
 loop = get_loop()
 scheduler = AsyncIOScheduler(event_loop=loop)
@@ -27,9 +28,9 @@ async def send_server_message():
     try:
         message = info_queue.get_nowait()
         if (isinstance(message, Info)):
-            await server.push(InfoType.Success, "info", message.body)
+            await server.push(message.status, "info", message.body)
         else:
-            await server.push(InfoType.Success, "other", message)
+            await server.push(InfoType.WARN, "other", message)
     except Exception as e:
         if (e.__class__.__name__ != "Empty"):
             print(e)
@@ -38,7 +39,7 @@ async def send_server_message():
 @scheduler.scheduled_job('interval', seconds=5)
 async def report_block_num():
     try:
-        await server.push(InfoType.Success, "block_num", task_queue.qsize())
+        await server.push(InfoType.SUCCESS, "block_num", task_queue.qsize())
     except Exception as e:
         print(e)
         pass

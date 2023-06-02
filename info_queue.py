@@ -1,8 +1,8 @@
 from globals import Success, Error, Warn, info_queue
-from service.oprotocol import InfoType
+from service.wrap_pb import InfoType
 
 info_type = {
-    InfoType.Success: Success,
+    InfoType.SUCCESS: Success,
     InfoType.ERROR: Error,
     InfoType.WARN: Warn
 }

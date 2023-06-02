@@ -1,3 +1,4 @@
+from service.wrap_pb import Status, InfoType
 from globals import server
 from service.websocket import Ctx
 
@@ -16,26 +17,26 @@ async def getList(ctx: Ctx):
 async def addWxName(ctx: Ctx):
     try:
         id = await ctx.serve.wechat.create_wechat_name(ctx.data["wx_name"])
-        ctx.status = 200
+        ctx.status = Status.OK
         ctx.body = {
             "id": id
         }
         await ctx.send()
-        await ctx.serve.push(200, "wechat-name/add", await getList(ctx))
+        await ctx.serve.push(InfoType.SUCCESS, "wechat-name/add", await getList(ctx))
 
     except Exception as e:
-        ctx.status = 500
+        ctx.status = Status.INTERNAL_SERVER_ERROR
         ctx.body = "error: {}".format(e)
         await ctx.send()
 
 @server.registerHandle("/wxuser/list")
 async def getWxNameList(ctx: Ctx):
     try:
-        ctx.status = 200
+        ctx.status = Status.OK
         ctx.body = await getList(ctx)
         await ctx.send()
     except Exception as e:
-        ctx.status = 500
+        ctx.status = Status.INTERNAL_SERVER_ERROR
         ctx.body = "error: {}".format(e)
         await ctx.send()
     
