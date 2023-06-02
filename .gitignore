@@ -1,3 +1,5 @@
 **/__pycache__
 .env
 proto-tools
+dist
+build

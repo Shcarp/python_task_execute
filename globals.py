@@ -1,6 +1,4 @@
 import asyncio
-from enum import Enum
-import json
 import queue
 
 from service import websocket
