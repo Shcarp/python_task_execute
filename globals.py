@@ -1,7 +1,7 @@
 import asyncio
 import queue
 
-from service import websocket
+from service.wobsocket import WebSocketServer
 from service.wrap_pb import InfoType
 
 loop = None
@@ -12,7 +12,8 @@ def get_loop():
         loop = asyncio.new_event_loop()
     return loop
 
-server = websocket.WebSocketServer()
+# server = websocket.WebSocketServer()
+server = WebSocketServer()
 task_queue = queue.Queue()
 
 # 运行产生的信息队列

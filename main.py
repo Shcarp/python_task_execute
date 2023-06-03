@@ -30,9 +30,11 @@ def release_lock():
 def main():
     register = RegisterTime()
 
+    # 启动websocket服务
     server_thread = threading.Thread(target=run_server, args=(register,))
     server_thread.start()
 
+    # 启动任务线程，从ktask_queue中获取任务
     task_run_thread = threading.Thread(target=worker)
     task_run_thread.start()
 
