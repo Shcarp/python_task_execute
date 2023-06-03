@@ -1,8 +1,5 @@
 **/__pycache__
 .env
 proto-tools
-<<<<<<< HEAD
 dist
 build
-=======
->>>>>>> to_proto

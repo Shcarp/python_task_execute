@@ -1,3 +1,5 @@
+import fcntl
+import multiprocessing
 import os
 import sys
 import time
@@ -6,6 +8,24 @@ import schedule
 from register_time import RegisterTime
 from run_task import worker
 from server import run_server
+
+LOCK_NAME= "message.lock"
+
+def acquire_lock():
+    path = os.path.join(os.getcwd(), LOCK_NAME)
+    # 判断文件是否存在, 存在则退出，不存在则创建, 并加锁
+    if os.path.exists(path):
+        print("The file is exists, exit")
+        sys.exit(0)
+    else:
+        # 创建文件
+        open(path, "w").close()
+
+def release_lock():
+    path = os.path.join(os.getcwd(), LOCK_NAME)
+    # 删除文件
+    os.remove(path)
+
 
 def main():
     register = RegisterTime()
@@ -21,9 +41,13 @@ def main():
         time.sleep(1)
 
 if __name__ == "__main__":
+    acquire_lock()
     while True:
         try:
-            main()
+            p = multiprocessing.Process(target=main)
+            p.daemon = True
+            p.start()
+            p.join()
         except KeyboardInterrupt:
             print("exit")
             break
@@ -32,3 +56,5 @@ if __name__ == "__main__":
             print("Error: {}".format(e))
             # restart the program
             os.execv(__file__, sys.argv)
+        finally:
+            release_lock()
