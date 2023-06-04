@@ -1,5 +1,6 @@
 import task
 import wechat
+import common
 from module.register import register
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from module.task import TaskMySql

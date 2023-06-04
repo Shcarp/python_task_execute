@@ -1,6 +1,6 @@
+from service.transport import Ctx
 from service.wrap_pb import Status, InfoType
 from globals import server
-from service.websocket import Ctx
 
 async def getList(ctx: Ctx):
     data = await ctx.serve.wechat.get_wechat_name_list()

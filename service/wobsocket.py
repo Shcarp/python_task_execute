@@ -1,18 +1,17 @@
 import asyncio
+import os
 import time
 import websockets
 from websockets.server import serve, WebSocketServerProtocol
-from service import Transport 
-from service.Transport import Ctx, WServer, WebSocketTransport
+from service.transport import Ctx, WServer, Transport
 from service.wrap_pb import MessageType, Push, Request
 
 class WebSocketTransport(Transport):
-    __socket = None
     def __init__(self, socket):
         self.__socket = socket
 
-    def _doSend(self, data: any):
-        self.__socket.send(data)
+    async def _doSend(self, data):
+       await self.__socket.send(data)
 
 class WebSocketServer(WServer):
     __CONNECT = set()
@@ -35,14 +34,17 @@ class WebSocketServer(WServer):
         self.__CONNECT.add(socket)
         transport = WebSocketTransport(socket)
         try:
-            async for data in self.socket:
+            async for data in socket:
+                print("server recv: {}".format(data))
                 if isinstance(data, bytes) == False:
+                    print("server recv: data type error")
                     transport.send("data type error")
                     continue
                 index = 0
-                if (data[index] == MessageType.REQUEST.value):
+                if ( data[index:1] == MessageType.REQUEST.value):
                     index += 1
                     request: Request = Request.parse(data[index:])
+                    print("server recv: {}".format(request))
                     ctx = Ctx(self, transport, request)
                     handles = await self._getHandles(request.url)
                     if (handles == None):

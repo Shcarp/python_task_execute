@@ -3,10 +3,12 @@ syntax = "proto3";
 package message;
 
 enum DataType {
-  number = 0;
-  string = 1;
-  float = 3;
-  json = 4;
+  String = 0;
+  Number = 1;
+  Bool = 2;
+  Array = 3;
+  Object = 4;
+  Null = 5;
 }
 
 message Body {

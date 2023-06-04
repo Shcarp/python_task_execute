@@ -7,11 +7,11 @@ from service.wrap_pb import MessageType, Push, Request, Response
 class Transport(ABC):
     _on_message_handle = None
 
-    def send(self, data: any):
-        self.__doSend(data)
+    async def send(self, data: any):
+        await self._doSend(data)
 
     @abstractmethod
-    def _doSend(self):
+    def _doSend(self, data):
         pass
 
 
@@ -36,7 +36,7 @@ class Ctx:
     
     @property
     def data(self): 
-        return self.__request.data.value
+        return self.__request.data
     
     @property
     def url(self):
@@ -61,13 +61,13 @@ class Ctx:
     async def send(self):
         if (self.__send == 1):
             return
-        response = MessageType.RESPONSE.value +  Response(self.__request.sequence, self.__status, time.time(), self.__body)
-        await self.__socket.send(response.serialize())
+        response = MessageType.RESPONSE.value +  Response(self.__request.sequence, self.__status, time.time(), self.__body).serialize()
+        await self.__socket.send(response)
         self.__send = 1
     
     async def push(self, status, event, message):
-        sendData = MessageType.PUSH.value +  Push(status=status, sendTime=time.time(), event=event, data=message)
-        await self.__socket.send(sendData.serialize())
+        sendData = MessageType.PUSH.value +  Push(status=status, sendTime=time.time(), event=event, data=message).serialize()
+        await self.__socket.send(sendData)
 
 
 class WServer(ABC):

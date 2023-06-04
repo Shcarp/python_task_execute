@@ -5,15 +5,19 @@ from typing import Any
 from service import message_pb2 as pb
 
 class MessageType(Enum):
+    OTHER = b'0'
     PUSH = b'1'
     REQUEST = b'2'
     RESPONSE = b'3'
 
 class DataType(Enum):
-    NUMBER = pb.DataType.number
-    STRING = pb.DataType.string
-    FLOAT = pb.DataType.float
-    JSON = pb.DataType.json
+    STRING = pb.DataType.String
+    NUMBER = pb.DataType.Number
+    BOOL = pb.DataType.Bool
+    ARRAY = pb.DataType.Array
+    OBJECT = pb.DataType.Object
+    NULL = pb.DataType.Null
+    
 
 class InfoType(Enum):
     SUCCESS = pb.InfoType.SUCCESS
@@ -39,14 +43,19 @@ class Request:
         self.sequence = sequence
         self.sendTime = sendTime
 
-        if (data.type == pb.DataType.JSON):
+        if (data.type == DataType.ARRAY.value):
             self.data = json.loads(data.value)
-        elif (data.type == pb.DataType.NUMBER):
+        elif (data.type == DataType.NUMBER.value):
             self.data = int(data.value)
-        elif (data.type == pb.DataType.FLOAT):
-            self.data = float(data.value)
+        elif (data.type == DataType.BOOL.value):
+            self.data = bool(data.value)
+        elif (data.type == DataType.OBJECT.value):
+            self.data = json.loads(data.value)
+        elif (data.type == DataType.NULL.value):
+            self.data = None
         else:
             self.data = data.value
+
 
     @staticmethod
     def parse(str):
@@ -71,7 +80,7 @@ class Response:
         response = pb.Response()
         response.type = self.type
         response.sequence = self.sequence
-        response.status = self.status
+        response.status = self.status.value
         response.sendTime = self.sendTime
 
         def assignment(type, data):
@@ -80,15 +89,21 @@ class Response:
             body.value = data 
             response.data.CopyFrom(body)
 
-        if (type(self.data) == dict or type(self.data) == list):
-            assignment(DataType.JSON.value, json.dumps(self.data))
+        if (type(self.data) == dict):
+            assignment(DataType.OBJECT.value, json.dumps(self.data))
+        elif (type(self.data) == list):
+            assignment(DataType.ARRAY.value, json.dumps(self.data))
         elif (type(self.data) == int):
-            response.data.value = str(self.data)
-        elif (type(self.data) == float):
-            assignment(DataType.FLOAT.value, str(self.data))
-        else:
+            assignment(DataType.NUMBER.value, str(self.data))
+        elif (type(self.data) == bool):
+            assignment(DataType.BOOL.value, str(self.data))
+        elif (type(self.data) == str):
             assignment(DataType.STRING.value, self.data)
-
+        elif (self.data == None):
+            assignment(DataType.NULL.value, None)
+        else:
+            raise Exception("data type error")
+        
         return response.SerializeToString()
 
 class Push:
@@ -117,13 +132,19 @@ class Push:
             body.value = data 
             push.data.CopyFrom(body)
 
-        if (type(self.data) == dict or type(self.data) == list):
-            assignment(DataType.JSON.value, json.dumps(self.data))
+        if (type(self.data) == dict):
+            assignment(DataType.OBJECT.value, json.dumps(self.data))
+        elif (type(self.data) == list):
+            assignment(DataType.ARRAY.value, json.dumps(self.data))
         elif (type(self.data) == int):
             assignment(DataType.NUMBER.value, str(self.data))
-        elif (type(self.data) == float):
-            assignment(DataType.FLOAT.value, str(self.data))
-        else:
+        elif (type(self.data) == bool):
+            assignment(DataType.BOOL.value, str(self.data))
+        elif (type(self.data) == str):
             assignment(DataType.STRING.value, self.data)
-
+        elif (self.data == None):
+            assignment(DataType.NULL.value, None)
+        else:
+            raise Exception("data type error")
+        
         return push.SerializeToString()
