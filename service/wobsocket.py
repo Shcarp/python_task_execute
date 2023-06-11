@@ -28,23 +28,17 @@ class WebSocketServer(WServer):
         '''
             处理连接
         '''
-        '''
-            处理连接
-        '''
         self.__CONNECT.add(socket)
         transport = WebSocketTransport(socket)
         try:
             async for data in socket:
-                print("server recv: {}".format(data))
                 if isinstance(data, bytes) == False:
-                    print("server recv: data type error")
                     transport.send("data type error")
                     continue
                 index = 0
                 if ( data[index:1] == MessageType.REQUEST.value):
                     index += 1
                     request: Request = Request.parse(data[index:])
-                    print("server recv: {}".format(request))
                     ctx = Ctx(self, transport, request)
                     handles = await self._getHandles(request.url)
                     if (handles == None):
