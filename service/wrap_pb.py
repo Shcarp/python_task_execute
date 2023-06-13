@@ -104,6 +104,8 @@ class Response:
         else:
             raise Exception("data type error")
         
+
+
         return response.SerializeToString()
 
 class Push:

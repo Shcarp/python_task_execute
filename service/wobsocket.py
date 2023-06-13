@@ -47,8 +47,8 @@ class WebSocketServer(WServer):
                         await handle(ctx)
         except Exception as e:
             print("server error: {}".format(e))
-        finally: 
-            self.__CONNECT.remove(socket)
+        # finally: 
+            # self.__CONNECT.remove(socket)
     
     async def pushSingle(self, socket: any, status, event, message):
         '''

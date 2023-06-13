@@ -64,7 +64,7 @@ async def addTask(ctx: Ctx):
             "list": list,
             "running_count": running_count
         }
-        await ctx.serve.push(InfoType.Success, "task-list/update", body)
+        await ctx.serve.push(InfoType.SUCCESS, "task-list/update", body)
     except Exception as e:
         ctx.status = Status.INTERNAL_SERVER_ERROR
         ctx.body = "error: {}".format(e)
@@ -85,9 +85,9 @@ async def editTask(ctx: Ctx):
             "list": list,
             "running_count": running_count
         }
-        await ctx.serve.push(InfoType.Success, "task-list/update", body)
+        await ctx.serve.push(InfoType.SUCCESS, "task-list/update", body)
     except Exception as e:
-        ctx.status = 500
+        ctx.status = Status.INTERNAL_SERVER_ERROR
         ctx.body = "error: {}".format(e)
         await ctx.send()
 
@@ -130,13 +130,13 @@ async def updateTaskStatus(ctx: Ctx):
             removeTask()
             
     except Exception as e:
-        ctx.status = 500
+        ctx.status = Status.INTERNAL_SERVER_ERROR
         ctx.body = "error: {}".format(e)
         await ctx.send()
     
     try: 
         await ctx.serve.task.update_task_status(ctx.data["id"], ctx.data["status"])
-        ctx.status = 200
+        ctx.status = Status.OK
         ctx.body = {
             "id": ctx.data["id"]
         }
@@ -146,10 +146,8 @@ async def updateTaskStatus(ctx: Ctx):
             "list": list,
             "running_count": running_count
         }
-        await ctx.serve.push(200, "task-list/update", body)
+        await ctx.serve.push(InfoType.SUCCESS, "task-list/update", body)
     except Exception as e:
-        ctx.status = 500
+        ctx.status = Status.INTERNAL_SERVER_ERROR
         ctx.body = "error: {}".format(e)
         await ctx.send()
-
-    
