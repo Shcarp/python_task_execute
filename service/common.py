@@ -1,10 +1,9 @@
 from globals import server
-from service.transport import Ctx
-from service.wrap_pb import Status
+from base.transport import Ctx
+from base.wrap_pb import Status
 
 @server.registerHandle("test")
 async def getWxNameList(ctx: Ctx):
-    print("test", ctx.data)
     try:
         ctx.status = Status.OK
         ctx.body = 2

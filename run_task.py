@@ -4,7 +4,7 @@ import pyautogui as pg
 import pyperclip as pc
 from globals import get_loop, task_queue
 from info_queue import push
-from service.wrap_pb import InfoType
+from base.wrap_pb import InfoType
 
 open_wchat = ["ctrl", "alt", "w"]
 wchat_search = ["ctrl", "f"]

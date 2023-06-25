@@ -1,11 +1,10 @@
-import fcntl
 import multiprocessing
 import os
 import sys
 import time
 import threading
 import schedule
-from register_time import RegisterTime
+from mtime.register_time import RegisterTime
 from run_task import worker
 from server import run_server
 

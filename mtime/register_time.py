@@ -1,7 +1,7 @@
 import threading
 import time
 import schedule
-from service.wrap_pb import InfoType
+from base.wrap_pb import InfoType
 
 from task_queue import push
 from info_queue import push as info_push

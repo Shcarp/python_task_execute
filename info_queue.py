@@ -1,5 +1,5 @@
 from globals import Success, Error, Warn, info_queue
-from service.wrap_pb import InfoType
+from base.wrap_pb import InfoType
 
 info_type = {
     InfoType.SUCCESS: Success,

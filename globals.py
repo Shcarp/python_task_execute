@@ -2,7 +2,7 @@ import asyncio
 import queue
 
 from service.wobsocket import WebSocketServer
-from service.wrap_pb import InfoType
+from base.wrap_pb import InfoType
 
 loop = None
 

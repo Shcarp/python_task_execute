@@ -3,8 +3,8 @@ import os
 import time
 import websockets
 from websockets.server import serve, WebSocketServerProtocol
-from service.transport import Ctx, WServer, Transport
-from service.wrap_pb import MessageType, Push, Request
+from base.transport import Ctx, WServer, Transport
+from base.wrap_pb import MessageType, Push, Request
 
 class WebSocketTransport(Transport):
     def __init__(self, socket):
@@ -39,8 +39,11 @@ class WebSocketServer(WServer):
                 if ( data[index:1] == MessageType.REQUEST.value):
                     index += 1
                     request: Request = Request.parse(data[index:])
+                    print("server request: {}".format(request.data))
                     ctx = Ctx(self, transport, request)
+                    print("server request url: {}".format(request.url))
                     handles = await self._getHandles(request.url)
+                    print("server handles: {}".format(handles))
                     if (handles == None):
                         continue
                     for handle in handles:

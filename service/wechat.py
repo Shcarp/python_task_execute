@@ -1,5 +1,5 @@
-from service.transport import Ctx
-from service.wrap_pb import Status, InfoType
+from base.transport import Ctx
+from base.wrap_pb import Status, InfoType
 from globals import server
 
 async def getList(ctx: Ctx):

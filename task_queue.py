@@ -1,4 +1,4 @@
-from globals import get_loop, task_queue, server
+from globals import task_queue
 
 def push(task):
     task_queue.put_nowait(task)
