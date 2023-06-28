@@ -40,7 +40,14 @@ class TaskMySql:
         query = "SELECT * FROM task WHERE name LIKE %s"
         params = ['%' + data['keyword'] + '%']
 
+        if data['status'] == 0:
+            query += " AND status != 5"
+
         if data['status'] != 0:
+            query += " AND status = %s"
+            params.append(data['status'])
+
+        if data['status'] == 5:
             query += " AND status = %s"
             params.append(data['status'])
 

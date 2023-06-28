@@ -39,11 +39,8 @@ class WebSocketServer(WServer):
                 if ( data[index:1] == MessageType.REQUEST.value):
                     index += 1
                     request: Request = Request.parse(data[index:])
-                    print("server request: {}".format(request.data))
                     ctx = Ctx(self, transport, request)
-                    print("server request url: {}".format(request.url))
                     handles = await self._getHandles(request.url)
-                    print("server handles: {}".format(handles))
                     if (handles == None):
                         continue
                     for handle in handles:
