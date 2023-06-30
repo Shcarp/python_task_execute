@@ -11,7 +11,7 @@ class TransactionDecorator:
 
     def _wrapper(self, instance):
         async def wrapped(*args, **kwargs):
-            conn, cur = await instance.getCurosr()
+            conn, cur = await instance.getCursor()
             try:
                 result = await self.func(instance, cur, *args, **kwargs)
                 await conn.commit()

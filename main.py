@@ -28,7 +28,6 @@ def release_lock():
 
 def main():
     register = RegisterTime()
-
     # 启动websocket服务
     server_thread = threading.Thread(target=run_server, args=(register,))
     server_thread.start()

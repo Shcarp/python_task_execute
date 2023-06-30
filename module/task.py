@@ -5,7 +5,7 @@ class TaskMySql:
     def __init__(self, pool) -> None:
         self.pool = pool
 
-    async def getCurosr(self):
+    async def getCursor(self):
         '''
             获取db连接和cursor对象，用于db的读写操作
             :param pool:
@@ -25,7 +25,7 @@ class TaskMySql:
             await init_func(self)
 
     @TransactionDecorator
-    async def create_task(slef, cursor, task_data):
+    async def create_task(self, cursor, task_data):
         # 在任务表中插入新任务的数据
         query = "INSERT INTO task (name, type, status, time, content, member) VALUES (%s, %s, %s, %s, %s, %s)"
         await cursor.execute(query, (task_data['name'], task_data['type'], task_data['status'], task_data['time'], task_data['content'], ",".join(task_data['member'])))

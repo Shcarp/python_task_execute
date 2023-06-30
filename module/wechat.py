@@ -7,7 +7,7 @@ class WechatNamesMySql:
     def __init__(self, pool) -> None:
         self.pool = pool
 
-    async def getCurosr(self):
+    async def getCursor(self):
         '''
             获取db连接和cursor对象，用于db的读写操作
             :param pool:

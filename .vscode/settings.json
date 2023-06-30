@@ -1,8 +1,19 @@
 {
     "cSpell.words": [
+        "aiomysql",
         "apscheduler",
+        "binpath",
+        "distpath",
+        "lastrowid",
+        "menv",
+        "nodist",
+        "nopip",
         "regsitertime",
         "websockets",
         "wxuser"
-    ]
+    ],
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.autopep8"
+    },
+    "python.formatting.provider": "none"
 }

@@ -1,10 +1,14 @@
 import asyncio
+import os
 import queue
+from isolate import Isolate
 
 from service.wobsocket import WebSocketServer
 from base.wrap_pb import InfoType
 
 loop = None
+
+run_path = os.getcwd()
 
 def get_loop():
     global loop
