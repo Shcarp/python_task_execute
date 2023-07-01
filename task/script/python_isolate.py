@@ -20,7 +20,7 @@ class Params:
     def parseJSON(json_str):
         return json.loads(json_str)
 
-class Isolate:
+class PythonIsolate:
     def __init__(self, path) -> None:
         self.v_python = None
         self.path = path

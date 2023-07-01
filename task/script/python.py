@@ -4,7 +4,7 @@ import toml
 import zipfile
 from abc import ABC, abstractmethod
 
-from isolate import Isolate, Params
+from script.python_isolate import PythonIsolate, Params
 
 params_code = '''
 class Params:
@@ -42,7 +42,7 @@ class PythonRunner(ABC):
     
     def __init__(self, path) -> None:
        self.packages = []
-       self.isolate = Isolate(os.path.join(os.path.dirname(__file__), 'ISOLATE'))
+       self.isolate = PythonIsolate(os.path.join(os.path.dirname(__file__), 'ISOLATE'))
        self.path = path
        self.check()
 
@@ -97,7 +97,7 @@ if __name__ == '__main__':
         script_file = zip_file.namelist()
 
         def filePath(path):
-            path = self.path.split('/')[-1].split('.')[0] + '/' + path
+            path = script_file[0] + path
             return path
         
         config = False
@@ -124,7 +124,6 @@ if __name__ == '__main__':
         except Exception as e:
             raise Exception("running python source code error: " + str(e))
         
-
 @PythonRunner.register("pyc")
 class PythonByteCodeRunner(PythonRunner):
     bytes_code: bytes = None
@@ -176,9 +175,9 @@ if __name__ == '__main__':
     def doCheck(self):
         zip_file = zipfile.ZipFile(self.path)
         script_file = zip_file.namelist()
-
+        print(script_file)
         def filePath(path):
-            path = self.path.split('/')[-1].split('.')[0] + '/' + path
+            path = script_file[0] + path
             return path
         
         config = False
@@ -240,13 +239,14 @@ if __name__ == '__main__':
         if os.name == 'nt':
             # zip 文件
             if self.path.endswith('.zip'):
+                names = zip_ref.namelist()
                 def filePath(path):
-                    path = self.path.split('/')[-1].split('.')[0] + '/' + path
+                    path = names[0] + '/' + path
                     return path
                 with zipfile.ZipFile(self.path, 'r') as zip_ref:
-                    if filePath('METADATA') in zip_ref.namelist():
+                    if filePath('METADATA') in names:
                         metadata_file = zip_ref.open(filePath('METADATA'))
-                    elif filePath('PKG-INFO') in zip_ref.namelist():
+                    elif filePath('PKG-INFO') in names:
                         metadata_file = zip_ref.open(filePath('PKG-INFO'))
                     else:
                         raise ValueError("未找到元数据文件")
@@ -262,14 +262,19 @@ if __name__ == '__main__':
         elif os.name == 'posix':
             # tar.gz 文件
             if self.path.endswith('.tar.gz'):
+                print(self.path)
                 # 从ddNum-0.0.1.tar.gz 中获取 ddNum-0.0.1
                 with tarfile.open(self.path, 'r:gz') as tar_ref:
+                    names = tar_ref.getnames()
+                    print(names)
                     def filePath(path):
-                        path = self.path.split('/')[-1][:-7] + '/' + path
+                        path = names[0] + "/" + path
+                        print(path)
                         return path
-                    if filePath('PKG-INFO') in tar_ref.getnames():
+                    if filePath('PKG-INFO') in names:
+
                         metadata_file = tar_ref.extractfile(filePath('PKG-INFO'))
-                    elif filePath('METADATA') in tar_ref.getnames():
+                    elif filePath('METADATA') in names:
                         metadata_file = tar_ref.extractfile(filePath('METADATA'))
                     else:
                         raise ValueError("未找到元数据文件")

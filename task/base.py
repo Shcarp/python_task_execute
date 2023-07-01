@@ -1,6 +1,10 @@
+import os
+import time
 import uuid
-from task.execute import Execute
-from task.trigger import Trigger
+
+import schedule
+from execute import Execute, PythonExecuteTaskConfig
+from trigger import Trigger
 
 class TaskConfig:
     # name
@@ -36,8 +40,8 @@ class Task:
         self.name = config.name
         self.run_count = config.run_count
         self.run_status = config.run_status
-        self.trigger = Trigger.getInstance(kind=config.trigger_type, config=config.trigger_info)
-        self.execute = Execute.getInstance(kind=config.execute_type, config=config.execute_info)
+        self.trigger = Trigger.getInstance(kind=config.trigger_type, params=config.trigger_info)
+        self.executer = Execute.getInstance(kind=config.execute_type, config=config.execute_info)
 
     # 添加task_manage的引用
     def add_task_manage(self, task_manage):
@@ -49,18 +53,61 @@ class Task:
         self.run_status = 1
 
     def stop(self):
-        self.trigger.stop(self)
+        print("stop")
+        self.trigger.stop()
         # 设置状态为停止
         self.run_status = 0
     
     def execute(self):
+        print("execute")
+        print("execute less count", self.run_count)
         # run_count 减少
         self.run_count -= 1
         # 执行
-        self.execute.execute()
+        self.executer.execute()
         # 如果run_count == 0, 则停止
         if self.run_count == 0:
             self.stop()
-        # 如果run_count > 0, 则继续
-        else:
-            self.start()
+
+def testTrigger():
+    task = Task(config=TaskConfig(
+            name="test", 
+            run_count=5, 
+            run_status=0, 
+            trigger_type="interval", 
+            trigger_info={"interval": 4}, 
+            execute_type="Python", 
+            execute_info=PythonExecuteTaskConfig(
+                key="test.zip",
+                module="py",
+                location="local",
+                path=os.path.join(os.getcwd(), "task","__test__", "test.zip"),
+                params={"a": 1, "b": 2}
+            )
+        )
+    )
+    task.start()
+
+    task = Task(config=TaskConfig(
+            name="test", 
+            run_count=5, 
+            run_status=0, 
+            trigger_type="interval", 
+            trigger_info={"interval": 4}, 
+            execute_type="Python", 
+            execute_info=PythonExecuteTaskConfig(
+                key="7339de53cee41af98a2109200.0.1.tar.gz",
+                module="package",
+                location="remote",
+                path="http://1.117.56.86:8090/download/7339de53cee41af98a2109200.0.1.tar.gz",
+                params={"a": 1, "b": 2}
+            )
+        )
+    )
+
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
+
+testTrigger()

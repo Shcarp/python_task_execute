@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
-from task.loader import Loader
-from task.script.python import PythonRunner
+from loader import Loader
+from script.python import PythonRunner
 
 class Execute(ABC):
     dir = {}
@@ -30,8 +30,8 @@ class PythonExecuteTaskConfig:
     path: str = None # 脚本路径
     params: dict = None # 脚本运行参数
     mode: str = None  # pyc, py, 包
-    def __init__(self, name, module, location, path, params):
-        self.name = name
+    def __init__(self, key, module, location, path, params):
+        self.key = key
         self.location = location
         self.path = path
         self.params = params
@@ -41,13 +41,17 @@ class PythonExecuteTaskConfig:
 class PythonScriptExecute(Execute):
     def __init__(self, config: PythonExecuteTaskConfig):
         self.flag = False
+        self.loader = Loader.getInstance(config.location, {"path": config.path, "key": config.key})
+        self.execute_path = None
+        self.init()
         self.config = config
-        self.loader = Loader.getInstance(config.location, {"path": config.path,"key": config.key})
-        self.runner = PythonRunner.getInstance(config.mode, config.path)
+        self.runner = PythonRunner.getInstance(config.mode, self.execute_path)
+        self.flag = True
 
     def init(self):
-        self.loader.load()
-        self.flag = True
+        self.execute_path = self.loader.load()
+        print("load path: ", self.execute_path)
+        
 
     def execute(self):
         if not self.flag:

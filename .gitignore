@@ -4,3 +4,4 @@ proto-tools
 dist
 build
 ISOLATE
+SCRIPT_CACHE
