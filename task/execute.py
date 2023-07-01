@@ -52,9 +52,5 @@ class PythonScriptExecute(Execute):
     def execute(self):
         if not self.flag:
             self.init()
-        self.runner.run()
-
-
-# class PythonSourceCodeExecute:
-
+        self.runner.run(self.config.params)
 
