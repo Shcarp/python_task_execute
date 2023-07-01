@@ -1,27 +1,7 @@
-import asyncio
-import os
-import queue
-from isolate import Isolate
+from src.server_base.wrap_pb import InfoType
+from src.service.wobsocket import WebSocketServer
 
-from service.wobsocket import WebSocketServer
-from base.wrap_pb import InfoType
-
-loop = None
-
-run_path = os.getcwd()
-
-def get_loop():
-    global loop
-    if loop is None:
-        loop = asyncio.new_event_loop()
-    return loop
-
-# server = websocket.WebSocketServer()
 server = WebSocketServer()
-task_queue = queue.Queue()
-
-# 运行产生的信息队列
-info_queue = queue.Queue()
 
 class Info:
     status: InfoType = InfoType.SUCCESS,

@@ -5,7 +5,7 @@ import aiomysql
 
 from dotenv import load_dotenv
 
-from globals import get_loop
+from src.globals import get_loop
 
 
 ssl_ctx = os.getenv("MYSQL_SSL")

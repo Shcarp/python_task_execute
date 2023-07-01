@@ -129,7 +129,6 @@ if __name__ == '__main__':
 
         try:
             self.isolate.execute(self.wrap(self.source_code), params=params)
-            print("running python source code")
         except Exception as e:
             raise Exception("running python source code error: " + str(e))
         
@@ -187,7 +186,6 @@ if __name__ == '__main__':
     def doCheck(self):
         zip_file = zipfile.ZipFile(self.path)
         script_file = zip_file.namelist()
-        print(script_file)
         def filePath(path):
             path = script_file[0] + path
             return path
@@ -213,7 +211,6 @@ if __name__ == '__main__':
 
         try:
             self.isolate.execute(self.wrap(), params=params)
-            print("running python byte code")
         except Exception as e:
             raise Exception("running python byte code error: " + str(e))
 
@@ -277,14 +274,10 @@ if __name__ == '__main__':
         elif os.name == 'posix':
             # tar.gz 文件
             if self.path.endswith('.tar.gz'):
-                print(self.path)
-                # 从ddNum-0.0.1.tar.gz 中获取 ddNum-0.0.1
                 with tarfile.open(self.path, 'r:gz') as tar_ref:
                     names = tar_ref.getnames()
-                    print(names)
                     def filePath(path):
                         path = names[0] + "/" + path
-                        print(path)
                         return path
                     if filePath('PKG-INFO') in names:
 

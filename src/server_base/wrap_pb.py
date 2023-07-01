@@ -2,7 +2,7 @@
 from enum import Enum
 import json
 from typing import Any
-from base import message_pb2 as pb
+from src.server_base import message_pb2 as pb
 
 class MessageType(Enum):
     OTHER = b'0'

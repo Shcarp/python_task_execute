@@ -3,8 +3,8 @@ import os
 import time
 import websockets
 from websockets.server import serve, WebSocketServerProtocol
-from base.transport import Ctx, WServer, Transport
-from base.wrap_pb import MessageType, Push, Request
+from src.server_base.transport import Ctx, WServer, Transport
+from src.server_base.wrap_pb import MessageType, Push, Request
 
 class WebSocketTransport(Transport):
     def __init__(self, socket):

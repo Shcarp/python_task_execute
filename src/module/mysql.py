@@ -1,5 +1,7 @@
 
 # Desc: mysql操作
+from abc import ABC
+
 class TransactionDecorator:
     def __init__(self, func):
         self.func = func
@@ -22,3 +24,17 @@ class TransactionDecorator:
             finally:
                 await instance.pool.release(conn)
         return wrapped
+
+class MysqlConnect(ABC):
+    def __init__(self, pool) -> None:
+        self.pool = pool
+
+    async def getCursor(self):
+        '''
+            获取db连接和cursor对象,用于db的读写操作
+            :param pool
+            :return
+        '''
+        conn = await self.pool.acquire()
+        cur = await conn.cursor()
+        return conn, cur

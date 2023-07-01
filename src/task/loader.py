@@ -1,7 +1,6 @@
-from abc import ABC, abstractmethod
 import os
-import tempfile
 import requests
+from abc import ABC, abstractmethod
 
 class Loader(ABC):
     DIR = {}

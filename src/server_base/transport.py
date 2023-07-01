@@ -2,7 +2,7 @@
 import time
 from typing import Callable
 from abc import ABC, abstractmethod
-from base.wrap_pb import MessageType, Push, Request, Response
+from src.server_base.wrap_pb import MessageType, Push, Request, Response
 
 class Transport(ABC):
     _on_message_handle = None
