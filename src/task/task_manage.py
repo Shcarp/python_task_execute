@@ -1,6 +1,5 @@
 
-from task.base import Task
-
+from .base import Task
 
 class TaskManage: 
     

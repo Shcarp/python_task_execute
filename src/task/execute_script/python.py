@@ -4,12 +4,10 @@ import toml
 import zipfile
 from abc import ABC, abstractmethod
 
-from execute_script.python_isolate import PythonIsolate, Params
+from .python_isolate import PythonIsolate, Params
 
 params_code = '''
 class Params:
-    file_path = None
-    params = None
     def __init__(self, file_path, params) -> None:
         self.file_path = file_path
         self.params = params
@@ -25,10 +23,6 @@ class Params:
 
 class PythonRunner(ABC):
     DIR = {}
-    path: str = None
-    packages: list = []
-    isolate = None
-
     @staticmethod
     def register(execute_name):
         def wrapper(cls):
@@ -72,8 +66,6 @@ class PythonSourceCodeRunner(PythonRunner):
     '''
         运行源码脚本
     '''
-    source_code: str = None
-    config: dict = None
     def __init__(self, path):
         super().__init__(path)
         packages = self.config.get('package')
@@ -137,8 +129,6 @@ class PythonByteCodeRunner(PythonRunner):
     '''
         运行字节码脚本
     '''
-    bytes_code: bytes = None
-
     def __init__(self, path):
         super().__init__(path)
         packages = self.config.get('package')
@@ -219,7 +209,6 @@ class PythonPackageRunner(PythonRunner):
     '''
         运行安装包
     '''
-    package_name: str = None
     def __init__(self, path):
         super().__init__(path)
         # 安装包
@@ -302,22 +291,3 @@ if __name__ == '__main__':
         except Exception as e:
             raise Exception("running python package error: " + str(e))
 
-
-def testSourceCode():
-    path = os.path.join(os.path.dirname(__file__), "../" ,"__test__/test.zip")
-    runner = PythonRunner.getInstance("py", path=path)
-    runner.run({"a": 1, "b": 2})
-
-def testBytesCode():
-    path = os.path.join(os.path.dirname(__file__), "../" ,"__test__/testbytes.zip")
-    runner = PythonRunner.getInstance("pyc", path=path)
-    runner.run({"a": 1, "b": 2})
-
-def testPackage():
-    path = os.path.join(os.path.dirname(__file__), "../" ,"__test__/addNum-0.0.1.tar.gz")
-    runner = PythonRunner.getInstance("package", path=path)
-    runner.run({"a": 1, "b": 2})
-
-# testSourceCode()
-# testBytesCode()
-# testPackage()

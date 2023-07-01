@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
-from loader import Loader
-from execute_script.python import PythonRunner
+from .loader import Loader
+from .execute_script.python import PythonRunner
 
 class Execute(ABC):
     DIR = {}

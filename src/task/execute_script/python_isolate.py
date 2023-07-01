@@ -7,8 +7,6 @@ import subprocess
 from venv import EnvBuilder
 
 class Params:
-    file_path = None
-    params = None
     def __init__(self, file_path, params) -> None:
         self.file_path = file_path
         self.params = params
