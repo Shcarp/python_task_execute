@@ -4,20 +4,20 @@ import tempfile
 import requests
 
 class Loader(ABC):
-    dir = {}
+    DIR = {}
     def __init__(self):
         pass
 
     @staticmethod
     def register(loader_name):
         def wrapper(cls):
-            Loader.dir[loader_name] = cls
+            Loader.DIR[loader_name] = cls
             return cls
         return wrapper
     
     @staticmethod
     def getInstance(kind, params) -> "Loader":
-        return Loader.dir[kind](params)
+        return Loader.DIR[kind](params)
     
     @abstractmethod
     def load(self) -> str:

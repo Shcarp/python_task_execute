@@ -1,4 +1,5 @@
 import os
+import threading
 import time
 import uuid
 
@@ -22,9 +23,9 @@ class TaskConfig:
     # info
     execute_info: dict = None  # { "key": "xxx", "location": "xxx", "path": "xxx", "params": "xxx", "mode": "xxx" }
     # block
-    block: bool = False
+    screen: bool = False
 
-    def __init__(self, name, run_count, run_status, trigger_type, trigger_info, execute_type, execute_info, block=False):
+    def __init__(self, name, run_count, run_status, trigger_type, trigger_info, execute_type, execute_info, screen=False):
         self.name = name
         self.run_count = run_count
         self.run_status = run_status
@@ -32,12 +33,13 @@ class TaskConfig:
         self.trigger_info = trigger_info
         self.execute_type = execute_type
         self.execute_info = execute_info
-        self.block = block
+        self.screen = screen
 
 class Task:
     def __init__(self, config: TaskConfig):
         self.id = str(uuid.uuid4())
         self.name = config.name
+        self.screen = config.screen
         self.run_count = config.run_count
         self.run_status = config.run_status
         self.trigger = Trigger.getInstance(kind=config.trigger_type, params=config.trigger_info)
@@ -53,20 +55,19 @@ class Task:
         self.run_status = 1
 
     def stop(self):
-        print("stop")
         self.trigger.stop()
         # 设置状态为停止
         self.run_status = 0
     
     def execute(self):
-        print("execute")
-        print("execute less count", self.run_count)
         # run_count 减少
         self.run_count -= 1
         # 执行
-        self.executer.execute()
+        th = threading.Thread(target=self.executer.execute)
+        th.start()
         # 如果run_count == 0, 则停止
         if self.run_count == 0:
+            th.join()
             self.stop()
 
 def testTrigger():
@@ -100,14 +101,15 @@ def testTrigger():
                 module="package",
                 location="remote",
                 path="http://1.117.56.86:8090/download/7339de53cee41af98a2109200.0.1.tar.gz",
-                params={"a": 1, "b": 2}
+                params={"a": 1, "b": 3}
             )
         )
     )
+    task.start()
 
     while True:
         schedule.run_pending()
         time.sleep(1)
 
 
-testTrigger()
+# testTrigger()

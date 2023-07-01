@@ -4,7 +4,7 @@ import toml
 import zipfile
 from abc import ABC, abstractmethod
 
-from script.python_isolate import PythonIsolate, Params
+from execute_script.python_isolate import PythonIsolate, Params
 
 params_code = '''
 class Params:
@@ -47,10 +47,16 @@ class PythonRunner(ABC):
        self.check()
 
     def check(self):
+        '''
+            检查文件是否符合要求
+        '''
         self.doCheck()
 
     @abstractmethod
     def doCheck(self):
+        '''
+            检查文件是否符合要求
+        '''
         pass
     
     @abstractmethod
@@ -63,6 +69,9 @@ class PythonRunner(ABC):
 
 @PythonRunner.register("py")
 class PythonSourceCodeRunner(PythonRunner):
+    '''
+        运行源码脚本
+    '''
     source_code: str = None
     config: dict = None
     def __init__(self, path):
@@ -126,6 +135,9 @@ if __name__ == '__main__':
         
 @PythonRunner.register("pyc")
 class PythonByteCodeRunner(PythonRunner):
+    '''
+        运行字节码脚本
+    '''
     bytes_code: bytes = None
 
     def __init__(self, path):
@@ -207,6 +219,9 @@ if __name__ == '__main__':
 
 @PythonRunner.register("package")
 class PythonPackageRunner(PythonRunner):
+    '''
+        运行安装包
+    '''
     package_name: str = None
     def __init__(self, path):
         super().__init__(path)
@@ -241,7 +256,7 @@ if __name__ == '__main__':
             if self.path.endswith('.zip'):
                 names = zip_ref.namelist()
                 def filePath(path):
-                    path = names[0] + '/' + path
+                    path = names[0] + path
                     return path
                 with zipfile.ZipFile(self.path, 'r') as zip_ref:
                     if filePath('METADATA') in names:

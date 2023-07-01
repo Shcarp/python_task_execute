@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
 
 from loader import Loader
-from script.python import PythonRunner
+from execute_script.python import PythonRunner
 
 class Execute(ABC):
-    dir = {}
+    DIR = {}
     def __init__(self):
         pass
 
@@ -12,13 +12,13 @@ class Execute(ABC):
     @staticmethod
     def register(execute_name):
         def wrapper(cls):
-            Execute.dir[execute_name] = cls
+            Execute.DIR[execute_name] = cls
             return cls
         return wrapper
 
     @staticmethod
     def getInstance(kind, config) -> 'Execute':
-        return Execute.dir[kind](config)
+        return Execute.DIR[kind](config)
 
     @abstractmethod
     def execute(self):
@@ -50,11 +50,7 @@ class PythonScriptExecute(Execute):
 
     def init(self):
         self.execute_path = self.loader.load()
-        print("load path: ", self.execute_path)
-        
 
     def execute(self):
-        if not self.flag:
-            self.init()
         self.runner.run(self.config.params)
 
