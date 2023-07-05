@@ -1,8 +1,10 @@
-import threading
 import uuid
+
+from .serialize import Serialize
 from ..threadpool import ThreadPool
 from .execute import Execute
 from .trigger import Trigger
+
 
 class TaskConfig:
     # name
@@ -29,7 +31,7 @@ class TaskConfig:
         self.execute_info = execute_info
         self.screen = screen
 
-class Task:
+class Task(Serialize):
     def __init__(self, config: TaskConfig):
         self.run_status = 0
         self.id = str(uuid.uuid4())
@@ -61,4 +63,16 @@ class Task:
         # 如果run_count == 0, 则停止
         if self.run_count == 0:
             self.stop()
+
+    # 序列化
+    def serialize(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "run_status": self.run_status,
+            "run_count": self.run_count,
+            "trigger": self.trigger.serialize(),
+            "executer": self.executer.serialize(),
+            "screen": self.screen
+        }
 

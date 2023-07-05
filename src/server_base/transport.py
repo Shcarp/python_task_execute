@@ -5,7 +5,8 @@ from abc import ABC, abstractmethod
 from src.server_base.wrap_pb import MessageType, Push, Request, Response
 
 class Transport(ABC):
-    _on_message_handle = None
+    def __init__(self) -> None:
+        self._on_message_handle = None
 
     async def send(self, data: any):
         await self._doSend(data)
@@ -14,18 +15,11 @@ class Transport(ABC):
     def _doSend(self, data):
         pass
 
-
 class Ctx:
-    __send = 0
-    __socket: Transport = None
-    __serve: 'WServer' = None
-
-    __request: Request = None
-
-    __body = None
-    __status = 200
-
     def __init__(self, serve, socket: Transport, request: Request) -> None:
+        self.__send = 0
+        self.__body = None
+        self.__status = 200
         self.__serve = serve
         self.__socket = socket
         self.__request = request
@@ -71,8 +65,10 @@ class Ctx:
 
 
 class WServer(ABC):
-    __module = {}
-    __handleDirectory = {}
+    def __init__(self) -> None:
+        self.__module = {}
+        self.__handleDirectory = {}
+        pass
 
     def __getattr__(self, name):
         if (name in self.__module):
@@ -120,14 +116,14 @@ class WServer(ABC):
         pass
     
     @abstractmethod
-    async def pushSingle(self, socket: any, status, event, message):
+    async def send(self, socket: any, status, event, message):
         '''
             发送消息
         '''
         pass
         
     @abstractmethod
-    async def push(self, status, event, message):
+    async def broadcast(self, status, event, message):
         '''
             推送消息
         '''

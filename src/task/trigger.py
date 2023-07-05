@@ -1,8 +1,9 @@
 import time
 import schedule
 from abc import ABC, abstractmethod
+from .serialize import Serialize
 
-class Trigger(ABC):
+class Trigger( Serialize, ABC):
     '''
         触发器
         用于触发任务的执行
@@ -54,6 +55,12 @@ class FixedTrigger(Trigger):
             停止监控
         '''
         schedule.cancel_job(self.job)
+    
+    def serialize(self):
+        return {
+            "kind": "fixed",
+            "params": self.params
+        }
 
 @Trigger.register("interval")
 class IntervalTrigger(Trigger):
@@ -77,3 +84,38 @@ class IntervalTrigger(Trigger):
             停止监控
         '''
         schedule.cancel_job(self.job)
+    
+    def serialize(self):
+        return {
+            "kind": "interval",
+            "params": self.params
+        }
+
+# 直接运行的触发器
+@Trigger.register("direct")
+class DirectTrigger(Trigger):
+    '''
+        直接运行触发器
+    '''
+    def __init__(self, params):
+        self.job = None
+        self.params = params
+    
+    def monitor(self, task):
+        '''
+            开始监控
+            interval: 间隔时间，单位秒
+        '''
+        task.execute()
+
+    def stop(self):
+        '''
+            停止监控
+        '''
+        pass
+
+    def serialize(self):
+        return {
+            "kind": "direct",
+            "params": self.params
+        }

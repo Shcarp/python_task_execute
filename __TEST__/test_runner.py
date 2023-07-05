@@ -21,28 +21,3 @@ def testPackage():
 testSourceCode()
 testBytesCode()
 testPackage()
-
-'''
-myproject
-├── __test__
-│   ├── testDataxw
-|   |   ├── test.zip
-|   |   ├── testbytes.zip
-|   |   └── addNum-0.0.1.tar.gz
-│   ├── test_task.py
-│   └── test_runner.py
-├── addNum
-│   ├── __init__.py
-│   └── addNum.py
-├── cache
-│   └── test.pyc
-├── config
-│   └── config.toml
-├── src
-|   ├── task
-|   |   ├── base.py
-│   ├── __init__.py
-│   └── main.py
-└── app.py
-'''
-

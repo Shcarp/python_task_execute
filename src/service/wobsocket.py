@@ -8,6 +8,7 @@ from src.server_base.wrap_pb import MessageType, Push, Request
 
 class WebSocketTransport(Transport):
     def __init__(self, socket):
+        super().__init__()
         self.__socket = socket
 
     async def _doSend(self, data):
@@ -52,14 +53,14 @@ class WebSocketServer(WServer):
         # finally: 
             # self.__CONNECT.remove(socket)
     
-    async def pushSingle(self, socket: any, status, event, message):
+    async def send(self, socket: any, status, event, message):
         '''
             发送消息
         '''
         sendData = MessageType.PUSH.value +  Push(status=status, sendTime=time.time(), event=event, data=message).serialize()
         await socket.send(sendData)
 
-    async def push(self, status, event, message):
+    async def broadcast(self, status, event, message):
         '''
             推送消息
         '''

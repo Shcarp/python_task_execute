@@ -1,9 +1,11 @@
 from abc import ABC, abstractmethod
 
+from .serialize import Serialize
+
 from .loader import Loader
 from .execute_script.python import PythonRunner
 
-class Execute(ABC):
+class Execute(Serialize, ABC):
     DIR = {}
     def __init__(self):
         pass
@@ -22,6 +24,10 @@ class Execute(ABC):
 
     @abstractmethod
     def execute(self):
+        pass
+
+    @abstractmethod
+    def serialize(self):
         pass
 
 class PythonExecuteTaskConfig:
@@ -54,5 +60,11 @@ class PythonScriptExecute(Execute):
     def execute(self):
         self.runner.run(self.config.params)
 
-
-
+    def serialize(self):
+        return {
+            "key": self.config.key,
+            "location": self.config.location,
+            "path": self.config.path,
+            "params": self.config.params,
+            "mode": self.config.mode,
+        }
