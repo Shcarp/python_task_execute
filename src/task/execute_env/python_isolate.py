@@ -4,7 +4,10 @@
 import json
 import os
 import subprocess
+import sys
 from venv import EnvBuilder
+
+number = 0
 
 class Params:
     def __init__(self, file_path, params) -> None:
@@ -68,8 +71,7 @@ class PythonIsolate:
         stdout, stderr = process.communicate()
         
         if(stderr.decode() != ""):
-            print(stderr.decode())
             raise Exception(stderr.decode())
-        print(stdout.decode())
         return stdout.decode()
+        # subprocess.check_call([venv_python, "-c", code, p_str])
     

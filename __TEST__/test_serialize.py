@@ -1,8 +1,6 @@
 import os
 import random
 import sys
-import time
-import schedule
 
 sys.path.append(os.path.join(os.getcwd()))
 

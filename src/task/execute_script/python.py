@@ -120,7 +120,7 @@ if __name__ == '__main__':
         params = Params(os.path.join(os.getcwd(), "cache", "test.pyc"), params= params)
 
         try:
-            self.isolate.execute(self.wrap(self.source_code), params=params)
+            return self.isolate.execute(self.wrap(self.source_code), params=params)
         except Exception as e:
             raise Exception("running python source code error: " + str(e))
         
@@ -200,7 +200,7 @@ if __name__ == '__main__':
         params = Params(os.path.join(os.getcwd(), "cache", "test.pyc"), params= params)
 
         try:
-            self.isolate.execute(self.wrap(), params=params)
+            return self.isolate.execute(self.wrap(), params=params)
         except Exception as e:
             raise Exception("running python byte code error: " + str(e))
 
@@ -287,7 +287,7 @@ if __name__ == '__main__':
     def run(self, params=None):
         params = Params(os.path.join(os.getcwd(), "cache", "test.pyc"), params= params)
         try:
-            self.isolate.execute(self.wrap(), params=params)
+            return self.isolate.execute(self.wrap(), params=params)
         except Exception as e:
             raise Exception("running python package error: " + str(e))
 

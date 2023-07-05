@@ -31,11 +31,6 @@ class Execute(Serialize, ABC):
         pass
 
 class PythonExecuteTaskConfig:
-    key: str = None  # 脚本key
-    location: str = None # 脚本所在位置， 本地，远程
-    path: str = None # 脚本路径
-    params: dict = None # 脚本运行参数
-    mode: str = None  # pyc, py, 包
     def __init__(self, key, module, location, path, params):
         self.key = key
         self.location = location
@@ -58,7 +53,7 @@ class PythonScriptExecute(Execute):
         self.execute_path = self.loader.load()
 
     def execute(self):
-        self.runner.run(self.config.params)
+        return self.runner.run(self.config.params)
 
     def serialize(self):
         return {

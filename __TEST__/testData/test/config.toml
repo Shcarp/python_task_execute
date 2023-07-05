@@ -1,0 +1,6 @@
+[info]
+name = "my-package"
+version = "0.1.0"
+description = "My package"
+[package]
+requests = "0.0.0"
