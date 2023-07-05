@@ -1,6 +1,7 @@
 import threading
 import uuid
-from .execute import Execute, PythonExecuteTaskConfig
+from ..threadpool import ThreadPool
+from .execute import Execute
 from .trigger import Trigger
 
 class TaskConfig:
@@ -56,10 +57,8 @@ class Task:
         # run_count 减少
         self.run_count -= 1
         # 执行
-        th = threading.Thread(target=self.executer.execute)
-        th.start()
+        ThreadPool.getInstance().add_task(func=self.executer.execute)
         # 如果run_count == 0, 则停止
         if self.run_count == 0:
-            th.join()
             self.stop()
 

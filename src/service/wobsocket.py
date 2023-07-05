@@ -14,7 +14,9 @@ class WebSocketTransport(Transport):
        await self.__socket.send(data)
 
 class WebSocketServer(WServer):
-    __CONNECT = set()
+    def __init__(self):
+        super().__init__()
+        self. __CONNECT = set()
 
     async def run(self, port = 9673):
         '''

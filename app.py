@@ -23,3 +23,6 @@ if __name__ == "__main__":
         finally:
             if os.path.exists(os.path.join(os.getcwd(), "message.lock")):
                 release_lock()
+
+
+
