@@ -1,20 +1,20 @@
 import os
+import random
 import sys
 import time
 import schedule
 
 sys.path.append(os.path.join(os.getcwd()))
-print(sys.path)
 
 from src.task.base import Task, TaskConfig
 from src.task.execute import PythonExecuteTaskConfig
 
-def testTrigger():
-    task = Task(config=TaskConfig(
+def generateTask(run_count, time):
+    return Task(config=TaskConfig(
             name="test", 
-            run_count=5, 
+            run_count=run_count, 
             trigger_type="interval", 
-            trigger_info={"interval": 4}, 
+            trigger_info={"interval": time}, 
             execute_type="Python", 
             execute_info=PythonExecuteTaskConfig(
                 key="test.zip",
@@ -25,9 +25,16 @@ def testTrigger():
             )
         )
     )
-    task.start()
 
-    task = Task(config=TaskConfig(
+def testTrigger():
+    taskList = []
+
+    for i in range(1, 10):
+        task = generateTask(5, i + random.randint(1, 10))
+        taskList.append(task)
+        task.start()
+
+    task2 = Task(config=TaskConfig(
             name="test", 
             run_count=5, 
             trigger_type="interval", 
@@ -42,7 +49,7 @@ def testTrigger():
             )
         )
     )
-    task.start()
+    task2.start()
 
     while True:
         schedule.run_pending()

@@ -4,7 +4,7 @@ import toml
 import zipfile
 from abc import ABC, abstractmethod
 
-from .python_isolate import PythonIsolate, Params
+from ..execute_env.python_isolate import PythonIsolate, Params
 
 params_code = '''
 class Params:
