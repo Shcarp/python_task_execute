@@ -96,7 +96,9 @@ import argparse
 {code}
 {params_code}
 def main(params: Params):
-    run(params.params)
+    res = run(params.params)
+    if res is not None:
+        sys.stdout.write(f"RUN^^" + str(res) + f"^^RES")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -176,7 +178,9 @@ module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 
 def main(params: Params):
-    module.run(params.params)
+    res = module.run(params.params)
+    if res is not None:
+        sys.stdout.write(f"RUN^^" + str(res) + f"^^RES")
     # 清除临时文件
     os.remove(f.name)
 
@@ -241,7 +245,9 @@ import {self.package_name}
 {params_code}
 
 def main(params: Params):
-    {self.package_name}.run(params.params)
+    res = {self.package_name}.run(params.params)
+    if res is not None:
+        sys.stdout.write(f"RUN^^" + str(res) + f"^^RES")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

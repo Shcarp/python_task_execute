@@ -39,7 +39,7 @@ assert len(taskManage.get_all_list()) == 1
 assert len(taskManage.get_no_start_list()) == 0
 assert len(taskManage.get_running_list()) == 1
 
-taskManage.stop(task1id)
+taskManage.cancel(task1id)
 
 assert len(taskManage.get_all_list()) == 1
 assert len(taskManage.get_no_start_list()) == 1
@@ -68,7 +68,7 @@ assert len(taskManage.get_running_list()) == 5
 
 # 停止2个
 for i in range(0, 2):
-    taskManage.stop(taskList[i])
+    taskManage.cancel(taskList[i])
 
 assert len(taskManage.get_all_list()) == len(taskList)
 assert len(taskManage.get_no_start_list()) == len(taskList) - 3

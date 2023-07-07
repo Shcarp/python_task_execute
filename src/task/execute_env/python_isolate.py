@@ -4,6 +4,7 @@
 import json
 import os
 from asyncio import subprocess
+import re
 # import subprocess
 import sys
 from venv import EnvBuilder
@@ -77,10 +78,23 @@ class PythonIsolate:
         venv_python = self.getPython()
         process = await subprocess.create_subprocess_exec(venv_python, "-c", code, p_str, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         self.process.append(process)
-        # process.terminate()
         stdout, stderr = await process.communicate()
-    
+        # 从列表中移除
+        self.process.remove(process)
+        
+
         if(stderr.decode() != ""):
             raise Exception(stderr.decode())
-        return stdout.decode()
+        
+        # 从stdout中获取返回值
+
+        all_out = stdout.decode()
+        # run 的返回值使用json字符串,res是字符串，需要提取RUN^^^^RES中内容
+        result = re.search(r"RUN\^\^(.*)\^\^RES", all_out, re.S)
+
+        if result is None:
+            res = None
+        else:
+            res = result.group(1)
+        return res
     

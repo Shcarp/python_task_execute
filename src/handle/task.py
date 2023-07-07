@@ -7,7 +7,6 @@ from src.task.execute import PythonExecuteTaskConfig
 
 @server.registerHandle("/task/add")
 async def handleAddTask(ctx: Ctx):
-    print(ctx.data)
     # 判断name, run_count, trigger_type, trigger_info, execute_type, execute_info是否在data中
     required_keys = ["name", "run_count", "trigger_type", "trigger_info", "execute_type", "execute_info"]
 
@@ -58,13 +57,16 @@ async def handleAddTask(ctx: Ctx):
                 )
             )
         )
-    
-    await task.init()
-
-    ctx.server.task_manage.add(task)
-    ctx.status = Status.OK
-    ctx.body = task.id
-    await ctx.send()
+    try:
+        await task.init()
+        ctx.server.task_manage.add(task)
+        ctx.status = Status.OK
+        ctx.body = task.id
+        await ctx.send()
+    except:
+        ctx.status = Status.INTERNAL_SERVER_ERROR
+        ctx.body = "fail"
+        await ctx.send()
 
 @server.registerHandle("/task/start")
 async def handleStartTask(ctx: Ctx):
@@ -83,7 +85,6 @@ async def handleStartTask(ctx: Ctx):
         ctx.status = Status.INTERNAL_SERVER_ERROR
         ctx.body = "fail"
         await ctx.send()
-    pass
 
 @server.registerHandle("/task/stop")
 async def handleStopTask(ctx: Ctx):
@@ -121,32 +122,16 @@ async def handleRemoveTask(ctx: Ctx):
         ctx.body = "fail"
         await ctx.send()
 
-@server.registerHandle("/task/all")
-async def handleGetAllTask(ctx: Ctx):
-    ctx.status = Status.OK
-    ctx.body = ctx.server.task_manage.get_all_list()
-    await ctx.send()
-
-@server.registerHandle("/task/running")
-async def handleGetRunningTask(ctx: Ctx):
-    ctx.status = Status.OK
-    ctx.body = ctx.server.task_manage.get_running_list()
-    await ctx.send()
-
-@server.registerHandle("/task/complete")
-async def handleGetCompleteTask(ctx: Ctx):
-    ctx.status = Status.OK
-    ctx.body = ctx.server.task_manage.get_complete_list()
-    await ctx.send()
-
-@server.registerHandle("/task/error")
-async def handleGetErrorTask(ctx: Ctx):
-    ctx.status = Status.OK
-    ctx.body = ctx.server.task_manage.get_error_list()
-    await ctx.send()
-
-@server.registerHandle("/task/notstart")
-async def handleExecuteTask(ctx: Ctx):
-    ctx.status = Status.OK
-    ctx.body = ctx.server.task_manage.get_no_start_list()
-    await ctx.send()
+@server.registerHandle("/task/list")
+async def handleListTask(ctx: Ctx):
+    print(ctx.data)
+    try:
+        tasks = ctx.server.task_manage.get_task_list(ctx.data)
+        ctx.status = Status.OK
+        ctx.body = tasks
+        await ctx.send()
+    except Exception as e:
+        print(e)
+        ctx.status = Status.INTERNAL_SERVER_ERROR
+        ctx.body = "fail"
+        await ctx.send()

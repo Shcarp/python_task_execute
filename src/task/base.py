@@ -23,7 +23,7 @@ class Task(Serialize):
         1、trigger  触发器 用来触发任务脚本的执行, 根据trigger_type来选择不同的触发器
         2、executer 执行器 用来执行任务脚本, 根据execute_type来选择不同的执行器
         3、block 是否阻塞, 如果阻塞, 则任务脚本执行完毕后, 才会执行下一个任务脚本, 如果不是阻塞, 会立即执行下一个任务脚本
-        4、run_status 0: 未运行 1: 运行中 2: 运行完毕 3: 运行失败
+        4、run_status 1: 运行中 2: 运行完毕 3: 运行失败
         5、run_count 运行次数、当运行次数为0时, 任务脚本不会再执行、且将状态设置为运行完毕
     '''
     def __init__(self, config: TaskConfig):
@@ -41,10 +41,6 @@ class Task(Serialize):
     async def init(self):
         await self.executer.init()
 
-    # 添加task_manage的引用
-    def add_task_manage(self, task_manage):
-        self.task_manage = task_manage
-
     async def start(self):
         '''
 
@@ -53,18 +49,20 @@ class Task(Serialize):
         # 设置状态为运行中
         self.run_status = 1
 
-    def stop(self):
+    def cancel(self):
         # 设置状态为停止
         self.run_status = 0
+        self._stop()
+
+    def _stop(self):
         self.trigger.stop()
         self.executer.stop()
     
     def execute(self):
-        print("execute", self.name, self.run_count)
         self.lock.acquire()
-        sys.stdout.flush()
-        if self.run_status == 0 or self.run_count <= 0:
+        if self.run_status != 1 or self.run_count <= 0:
             self.lock.release()
+            self.trigger.stop()
             return
         self.run_count = self.run_count - 1
         self.lock.release()
@@ -74,14 +72,12 @@ class Task(Serialize):
 
         def callback(status, message):
             if status == 0:
-                self.stop()
-                self.task_manage.error(self.id, message)
+                self.run_status = 3
+                print("execute failed " + self.name, self.run_count, message)
             else:
                 print("execute success " + self.name, self.run_count, message)
                 if self.run_count <= 0:
-                    self.stop()
-                    self.task_manage.complete(self.id)
-
+                    self.run_status = 2
 
         # 执行，根据是否阻塞来决定通过什么方式执行
         if not self.block:

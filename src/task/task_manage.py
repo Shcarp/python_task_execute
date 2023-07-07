@@ -1,59 +1,58 @@
 
+import re
 from .base import Task
 
 class TaskManage:
     def __init__(self) -> None:
         # 未开始
-        self.no_start_dir = {}
-        self.running_dir = {}
-        self.complete_dir = {}
-        self.error_dir = {}
+        self.task_map = {}
+
+    def get_Task(self, id) -> Task:
+        return self.task_map[id]
 
     def add(self, task: Task):
-        self.no_start_dir[task.id] = task
-        task.add_task_manage(self)
+        if task.id in self.task_map:
+            raise Exception("task already exists")
+        self.task_map[task.id] = task
         return task.id
     
     async def start(self, id):
-        task = self.no_start_dir.pop(id)
+        if id not in self.task_map:
+            raise Exception("task not found")
+        task: Task =self.get_Task(id)
         await task.start()
-        self.running_dir[id] = task
 
-    def stop(self, id):
-        task = self.running_dir.pop(id)
-        task.stop()
-        self.no_start_dir[id] = task
+    def cancel(self, id):
+        if id not in self.task_map:
+            raise Exception("task not found")
+        task = self.get_Task(id)
+        task.cancel()
     
     def remove(self, id):
         if id not in self.no_start_dir:
-            return
-        self.no_start_dir.pop(id)
+            raise Exception("task not found")
+        
+        self.task_map.pop(id)
 
-    def complete(self, id):
-        task = self.running_dir.pop(id)
-        self.complete_dir[id] = task
-    
-    def error(self, id, error = "success"):
-        task = self.running_dir.pop(id)
-        self.error_dir[id] = task
+    def get_task_list(self, params):
+        '''
+            获取任务列表
+            params: {
+                keyword: 关键字
+                status: 状态
+            }
+        '''
+        # 从self.task_map中获取
 
-    def get_all_list(self):
-        res = []
-        all_dirs = [self.no_start_dir, self.running_dir, self.complete_dir, self.error_dir]
+        filtered_tasks = []
 
-        for task_dir in all_dirs:
-            res.extend(task.serialize() for task in task_dir.values())
+        for task in self.task_map.values():
+            if 'keyword' in params and not re.search(params['keyword'], task.name, re.IGNORECASE):
+                continue
+            
+            if 'status' in params and task.run_status != params['status']:
+                continue
 
-        return res
-    
-    def get_no_start_list(self):
-        return [task.serialize() for task in self.no_start_dir.values()]
-    
-    def get_running_list(self):
-        return [task.serialize() for task in self.running_dir.values()]
-    
-    def get_complete_list(self):
-        return [task.serialize() for task in self.complete_dir.values()]
-    
-    def get_error_list(self):
-        return [task.serialize() for task in self.error_dir.values()]
+            filtered_tasks.append(task.serialize())
+
+        return filtered_tasks
