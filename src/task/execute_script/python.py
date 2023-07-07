@@ -41,20 +41,20 @@ class PythonRunner(ABC):
 
     async def init(self):
         self.check()
-        await self.doInit()
+        await self._doInit()
 
     def check(self):
         '''
             检查文件是否符合要求
         '''
-        self.doCheck()
+        self._doCheck()
 
     @abstractmethod
-    async def doInit(self):
+    async def _doInit(self):
         pass
 
     @abstractmethod
-    def doCheck(self):
+    def _doCheck(self):
         '''
             检查文件是否符合要求
         '''
@@ -64,7 +64,10 @@ class PythonRunner(ABC):
     def run(self, params=None):
         pass
 
-    def remove(self):
+    def stop(self):
+        self.isolate.stop()
+
+    def _remove(self):
         for i in self.packages:
             self.isolate.uninstall(i)
 
@@ -76,7 +79,7 @@ class PythonSourceCodeRunner(PythonRunner):
     def __init__(self, path):
         super().__init__(path)
         
-    async def doInit(self):
+    async def _doInit(self):
         packages = self.config.get('package')
         for package in packages:
             version = packages[package]
@@ -102,7 +105,7 @@ if __name__ == '__main__':
     main(Params.parseJSON(args.params))
 '''
 
-    def doCheck(self):
+    def _doCheck(self):
         zip_file = zipfile.ZipFile(self.path)
         script_file = zip_file.namelist()
 
@@ -141,7 +144,7 @@ class PythonByteCodeRunner(PythonRunner):
     def __init__(self, path):
         super().__init__(path)
 
-    async def doInit(self):
+    async def _doInit(self):
         packages = self.config.get('package')
 
         for package in packages:
@@ -184,7 +187,7 @@ if __name__ == '__main__':
     main(Params.parseJSON(args.params))
 '''
 
-    def doCheck(self):
+    def _doCheck(self):
         zip_file = zipfile.ZipFile(self.path)
         script_file = zip_file.namelist()
         def filePath(path):
@@ -223,7 +226,7 @@ class PythonPackageRunner(PythonRunner):
         super().__init__(path)
         # 安装包
     
-    async def doInit(self):
+    async def _doInit(self):
         await self.isolate.install(self.path)
         self.package_name = self.packages[0]
 
@@ -247,7 +250,7 @@ if __name__ == '__main__':
     main(Params.parseJSON(args.params))
 '''
 
-    def doCheck(self):
+    def _doCheck(self):
         # 在window 环境
         if os.name == 'nt':
             # zip 文件

@@ -16,12 +16,15 @@ class TaskConfig:
         self.execute_info = execute_info
         self.block = block
 
+
 class Task(Serialize):
     '''
         任务类
         1、trigger  触发器 用来触发任务脚本的执行, 根据trigger_type来选择不同的触发器
         2、executer 执行器 用来执行任务脚本, 根据execute_type来选择不同的执行器
         3、block 是否阻塞, 如果阻塞, 则任务脚本执行完毕后, 才会执行下一个任务脚本, 如果不是阻塞, 会立即执行下一个任务脚本
+        4、run_status 0: 未运行 1: 运行中 2: 运行完毕 3: 运行失败
+        5、run_count 运行次数、当运行次数为0时, 任务脚本不会再执行、且将状态设置为运行完毕
     '''
     def __init__(self, config: TaskConfig):
         self.exe_status = 0
@@ -54,6 +57,7 @@ class Task(Serialize):
         # 设置状态为停止
         self.run_status = 0
         self.trigger.stop()
+        self.executer.stop()
     
     def execute(self):
         print("execute", self.name, self.run_count)

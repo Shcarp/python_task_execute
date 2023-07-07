@@ -27,6 +27,10 @@ class Execute(Serialize, ABC):
         pass
 
     @abstractmethod
+    def stop(self):
+        pass
+
+    @abstractmethod
     def serialize(self):
         pass
 
@@ -54,6 +58,9 @@ class PythonScriptExecute(Execute):
 
     async def execute(self):
         return await self.runner.run(self.config.params)
+    
+    def stop(self):
+        self.runner.stop()
 
     def serialize(self):
         return {

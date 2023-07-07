@@ -24,6 +24,9 @@ class Params:
 
 class PythonIsolate:
     def __init__(self, path) -> None:
+        # 保存真正执行的进程，用于关闭，有多个
+        self.process = []
+
         self.v_python = None
         self.path = path
         # 判断是否存在虚拟环境
@@ -45,6 +48,12 @@ class PythonIsolate:
         builder.create(path)
         venv_python = os.path.join(path, "bin", "python")
         return venv_python
+    
+    def stop(self):
+        for process in self.process:
+            process.terminate()
+            # 从列表中移除
+            self.process.remove(process)
 
     def getPython(self):
         if self.v_python is None:
@@ -55,25 +64,23 @@ class PythonIsolate:
     async def install(self, package):
         venv_python = self.getPython()
         await subprocess.create_subprocess_exec(venv_python, "-m", "pip", "install",  package)
-        # subprocess.check_call([venv_python, "-m", "pip", "install",  package])
 
     # 移除包
     async def uninstall(self, package):
         venv_python = self.getPython()
-        # subprocess.check_call([venv_python, "-m", "pip", "uninstall", "-y", package])
         await subprocess.create_subprocess_exec(venv_python, "-m", "pip", "uninstall", "-y", package)
 
     # 执行
-    async def execute(self, code, params: Params):
+    async def execute(self, code, params: Params, ):
         # 将参数序列化为json字符串
         p_str = params.toJSON()
         venv_python = self.getPython()
-        # process = subprocess.Popen([venv_python, "-c", code, p_str], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         process = await subprocess.create_subprocess_exec(venv_python, "-c", code, p_str, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.process.append(process)
+        # process.terminate()
         stdout, stderr = await process.communicate()
-        
+    
         if(stderr.decode() != ""):
             raise Exception(stderr.decode())
         return stdout.decode()
-        # subprocess.check_call([venv_python, "-c", code, p_str])
     
