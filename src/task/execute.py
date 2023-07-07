@@ -23,7 +23,7 @@ class Execute(Serialize, ABC):
         return Execute.DIR[kind](config)
 
     @abstractmethod
-    def execute(self):
+    async def execute(self):
         pass
 
     @abstractmethod
@@ -44,16 +44,16 @@ class PythonScriptExecute(Execute):
         self.flag = False
         self.loader = Loader.getInstance(config.location, {"path": config.path, "key": config.key})
         self.execute_path = None
-        self.init()
         self.config = config
-        self.runner = PythonRunner.getInstance(config.mode, self.execute_path)
+
+    async def init(self):
+        self.execute_path = self.loader.load()
+        self.runner = PythonRunner.getInstance(self.config.mode, self.execute_path)
+        await self.runner.init()
         self.flag = True
 
-    def init(self):
-        self.execute_path = self.loader.load()
-
-    def execute(self):
-        return self.runner.run(self.config.params)
+    async def execute(self):
+        return await self.runner.run(self.config.params)
 
     def serialize(self):
         return {

@@ -14,9 +14,9 @@ class TaskManage:
         task.add_task_manage(self)
         return task.id
     
-    def start(self, id):
+    async def start(self, id):
         task = self.no_start_dir.pop(id)
-        task.start()
+        await task.start()
         self.running_dir[id] = task
 
     def stop(self, id):

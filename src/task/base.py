@@ -35,27 +35,33 @@ class Task(Serialize):
         self.trigger = Trigger.getInstance(kind=config.trigger_type, params=config.trigger_info)
         self.executer = Execute.getInstance(kind=config.execute_type, config=config.execute_info)
 
+    async def init(self):
+        await self.executer.init()
+
     # 添加task_manage的引用
     def add_task_manage(self, task_manage):
         self.task_manage = task_manage
 
-    def start(self):
-        self.trigger.monitor(self)
+    async def start(self):
+        '''
+
+        '''
+        await self.trigger.monitor(self)
         # 设置状态为运行中
         self.run_status = 1
 
     def stop(self):
         # 设置状态为停止
         self.run_status = 0
+        self.trigger.stop()
     
     def execute(self):
+        print("execute", self.name, self.run_count)
         self.lock.acquire()
         sys.stdout.flush()
         if self.run_status == 0 or self.run_count <= 0:
             self.lock.release()
             return
-        self.lock.release()
-        self.lock.acquire()
         self.run_count = self.run_count - 1
         self.lock.release()
 
@@ -88,6 +94,6 @@ class Task(Serialize):
             "run_count": self.run_count,
             "trigger": self.trigger.serialize(),
             "executer": self.executer.serialize(),
-            "screen": self.block
+            "block": self.block
         }
 

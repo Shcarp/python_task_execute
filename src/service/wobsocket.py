@@ -19,13 +19,13 @@ class WebSocketServer(WServer):
         super().__init__()
         self. __CONNECT = set()
 
-    async def run(self, port = 9673):
+    async def run(self, port = 9673, loop = None):
         '''
            启动服务
         '''
         print("server run, port: {}, pid: {}".format(port, os.getpid()))
         async with serve(self.handleConnect, "", port):
-            await asyncio.Future()
+            await asyncio.Future(loop=loop)
     
     async def handleConnect(self, socket: WebSocketServerProtocol):
         '''
@@ -35,6 +35,7 @@ class WebSocketServer(WServer):
         transport = WebSocketTransport(socket)
         try:
             async for data in socket:
+                print("server receive: {}".format(data))
                 if isinstance(data, bytes) == False:
                     transport.send("data type error")
                     continue

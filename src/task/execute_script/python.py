@@ -38,13 +38,20 @@ class PythonRunner(ABC):
        self.packages = []
        self.isolate = PythonIsolate(os.path.join(os.path.dirname(__file__), 'ISOLATE'))
        self.path = path
-       self.check()
+
+    async def init(self):
+        self.check()
+        await self.doInit()
 
     def check(self):
         '''
             检查文件是否符合要求
         '''
         self.doCheck()
+
+    @abstractmethod
+    async def doInit(self):
+        pass
 
     @abstractmethod
     def doCheck(self):
@@ -68,11 +75,13 @@ class PythonSourceCodeRunner(PythonRunner):
     '''
     def __init__(self, path):
         super().__init__(path)
+        
+    async def doInit(self):
         packages = self.config.get('package')
         for package in packages:
             version = packages[package]
             p = package + ('==' + version) if version != '0.0.0' else package
-            self.isolate.install(p)
+            await self.isolate.install(p)
             self.packages.append(p)
 
     def wrap(self, code):
@@ -116,11 +125,11 @@ if __name__ == '__main__':
         self.config = toml.loads(zip_file.read(filePath('config.toml')).decode('utf-8'))
         self.source_code = zip_file.read(filePath('main.py')).decode('utf-8')
         
-    def run(self, params=None):
+    async def run(self, params=None):
         params = Params(os.path.join(os.getcwd(), "cache", "test.pyc"), params= params)
 
         try:
-            return self.isolate.execute(self.wrap(self.source_code), params=params)
+            return await self.isolate.execute(self.wrap(self.source_code), params=params)
         except Exception as e:
             raise Exception("running python source code error: " + str(e))
         
@@ -131,12 +140,14 @@ class PythonByteCodeRunner(PythonRunner):
     '''
     def __init__(self, path):
         super().__init__(path)
+
+    async def doInit(self):
         packages = self.config.get('package')
 
         for package in packages:
             version = packages[package]
             p = package + ('==' + version) if version != '0.0.0' else package
-            self.isolate.install(p)
+            await self.isolate.install(p)
             self.packages.append(p)
 
     def wrap(self):
@@ -195,12 +206,11 @@ if __name__ == '__main__':
         self.config = toml.loads(zip_file.read(filePath('config.toml')).decode('utf-8'))
         self.bytes_code = zip_file.read(filePath('main.pyc'))
 
-    def run(self, params=None):
-
+    async def run(self, params=None):
         params = Params(os.path.join(os.getcwd(), "cache", "test.pyc"), params= params)
 
         try:
-            return self.isolate.execute(self.wrap(), params=params)
+            return await self.isolate.execute(self.wrap(), params=params)
         except Exception as e:
             raise Exception("running python byte code error: " + str(e))
 
@@ -212,7 +222,9 @@ class PythonPackageRunner(PythonRunner):
     def __init__(self, path):
         super().__init__(path)
         # 安装包
-        self.isolate.install(self.path)
+    
+    async def doInit(self):
+        await self.isolate.install(self.path)
         self.package_name = self.packages[0]
 
     def wrap(self):
@@ -284,10 +296,10 @@ if __name__ == '__main__':
 
                     raise ValueError("无法获取包名称")       
 
-    def run(self, params=None):
+    async def run(self, params=None):
         params = Params(os.path.join(os.getcwd(), "cache", "test.pyc"), params= params)
         try:
-            return self.isolate.execute(self.wrap(), params=params)
+            return await self.isolate.execute(self.wrap(), params=params)
         except Exception as e:
             raise Exception("running python package error: " + str(e))
 

@@ -25,7 +25,7 @@ class Ctx:
         self.__request = request
 
     @property
-    def serve(self):
+    def server(self) -> 'WServer':
         return self.__serve
     
     @property

@@ -3,7 +3,8 @@
 #
 import json
 import os
-import subprocess
+from asyncio import subprocess
+# import subprocess
 import sys
 from venv import EnvBuilder
 
@@ -51,24 +52,25 @@ class PythonIsolate:
         return self.v_python
     
     # 安装包
-    def install(self, package):
+    async def install(self, package):
         venv_python = self.getPython()
-        print(venv_python)
-        subprocess.check_call([venv_python, "-m", "pip", "install",  package])
+        await subprocess.create_subprocess_exec(venv_python, "-m", "pip", "install",  package)
+        # subprocess.check_call([venv_python, "-m", "pip", "install",  package])
 
     # 移除包
-    def uninstall(self, package):
+    async def uninstall(self, package):
         venv_python = self.getPython()
-        print(venv_python)
-        subprocess.check_call([venv_python, "-m", "pip", "uninstall", "-y", package])
+        # subprocess.check_call([venv_python, "-m", "pip", "uninstall", "-y", package])
+        await subprocess.create_subprocess_exec(venv_python, "-m", "pip", "uninstall", "-y", package)
 
     # 执行
-    def execute(self, code, params: Params):
+    async def execute(self, code, params: Params):
         # 将参数序列化为json字符串
         p_str = params.toJSON()
         venv_python = self.getPython()
-        process = subprocess.Popen([venv_python, "-c", code, p_str], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = process.communicate()
+        # process = subprocess.Popen([venv_python, "-c", code, p_str], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process = await subprocess.create_subprocess_exec(venv_python, "-c", code, p_str, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = await process.communicate()
         
         if(stderr.decode() != ""):
             raise Exception(stderr.decode())

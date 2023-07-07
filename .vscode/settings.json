@@ -10,6 +10,7 @@
         "menv",
         "nodist",
         "nopip",
+        "notstart",
         "regsitertime",
         "websockets",
         "wxuser"

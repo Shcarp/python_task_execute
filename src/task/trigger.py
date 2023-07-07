@@ -1,5 +1,5 @@
 import time
-import schedule
+from src.globals import scheduler
 from abc import ABC, abstractmethod
 from .serialize import Serialize
 
@@ -47,14 +47,16 @@ class FixedTrigger(Trigger):
             开始监控
             fixed: 固定时间，时间戳
         '''
-        job = schedule.every().day.at(self.conversion_time(self.params.get("fixed"))).do(task.execute)
+        job = scheduler.add_job(task.execute, 'date', run_date=self.conversion_time(self.params.get("fixed")))
         self.job = job
 
     def stop(self):
         '''
             停止监控
         '''
-        schedule.cancel_job(self.job)
+        if self.job:
+            self.job.remove()
+            self.job = None
     
     def serialize(self):
         return {
@@ -71,19 +73,25 @@ class IntervalTrigger(Trigger):
         self.job = None
         self.params = params
     
-    def monitor(self, task):
+    async def monitor(self, task):
         '''
             开始监控
             interval: 间隔时间，单位秒
         '''
-        job = schedule.every(self.params.get("interval")).seconds.do(task.execute)
-        self.job = job
+        try:
+            job = scheduler.add_job(task.execute, 'interval', seconds=self.params.get("interval"))
+            self.job = job
+        except Exception as e:
+            print("error", e)
 
     def stop(self):
         '''
             停止监控
         '''
-        schedule.cancel_job(self.job)
+        # 如果任务已经被删除，那么就不需要删除了
+        if self.job:
+            self.job.remove()
+            self.job = None
     
     def serialize(self):
         return {
