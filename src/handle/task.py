@@ -124,7 +124,7 @@ async def handleRemoveTask(ctx: Ctx):
 
 @server.registerHandle("/task/list")
 async def handleListTask(ctx: Ctx):
-    print(ctx.data)
+    # print(ctx.data)
     try:
         tasks = ctx.server.task_manage.get_task_list(ctx.data)
         ctx.status = Status.OK
