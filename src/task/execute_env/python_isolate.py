@@ -24,6 +24,9 @@ class Params:
         return json.loads(json_str)
 
 class PythonIsolate:
+    '''
+        python 虚拟环境
+    '''
     def __init__(self, path) -> None:
         # 保存真正执行的进程，用于关闭，有多个
         self.process = []

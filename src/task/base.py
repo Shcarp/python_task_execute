@@ -2,7 +2,7 @@ import sys
 import threading
 import uuid
 from .serialize import Serialize
-from ..threadpool import ThreadPool
+from .threadpool import ThreadPool
 from .execute import Execute
 from .trigger import Trigger
 
@@ -43,22 +43,33 @@ class Task(Serialize):
 
     async def start(self):
         '''
-
+            开始执行任务
         '''
         await self.trigger.monitor(self)
         # 设置状态为运行中
         self.run_status = 1
 
     def cancel(self):
+        '''
+            取消任务
+        '''
         # 设置状态为停止
         self.run_status = 0
         self._stop()
 
     def _stop(self):
+        '''
+            停止任务
+        '''
         self.trigger.stop()
         self.executer.stop()
     
     def execute(self):
+        '''
+            执行任务
+            1. 判断任务是否已经停止, 如果run_status为0 或者 run_count <= 0 则停止任务
+            2. 通过线程池执行任务
+        '''
         self.lock.acquire()
         if self.run_status != 1 or self.run_count <= 0:
             self.lock.release()
@@ -87,6 +98,9 @@ class Task(Serialize):
 
     # 序列化
     def serialize(self):
+        '''
+            序列化
+        '''
         return {
             "id": self.id,
             "name": self.name,

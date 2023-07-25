@@ -5,6 +5,18 @@ from queue import Queue
 from threading import Thread
 
 class ThreadPool:
+    '''
+        线程池
+        1、max_threads 最大线程数
+        2、queue 任务队列
+        3、block_queue 阻塞任务队列
+        5、loop 事件循环
+        6、running 是否运行中
+        7、callbacks 回调函数
+
+        通过 add_task 和 add_block_task 添加任务
+        通过 wait_completion 等待任务完成, 在完成任务后会调用回调函数
+    '''
     instance = None
     @staticmethod
     def getInstance(max_threads = 5):
